@@ -1,0 +1,40 @@
+# yamllint
+image: dleskecc/tester.py
+
+variables:
+  GIT_SUBMODULE_STRATEGY: normal
+  PYLINTRC: .tests/extras/pylintrc
+
+stages:
+  - linting
+
+default:
+  tags:
+    - unprivileged
+
+todos:
+  except:
+    - main
+  allow_failure: true
+  stage: linting
+  script:
+    - .tests/todos
+
+todos_main:
+  only:
+    - main
+  allow_failure: true
+  stage: linting
+  script:
+    - .tests/todos && true; todos=$?
+    - anybadge --label=todos --value=$todos --value-format=" %d " --file=todos.svg --use-max 1=green 5=yellow 10=orange 20=red
+    - test $todos -eq 0
+  artifacts:
+    # create artifact even when the job fails, which it should if todos > 0
+    when: always
+    paths: ['todos.svg']
+
+syntax:
+  stage: linting
+  script:
+    - .tests/test-all
