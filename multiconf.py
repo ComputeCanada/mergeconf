@@ -1,5 +1,11 @@
 # vi: set softtabstop=2 ts=2 sw=2 expandtab:
 # pylint: disable=W0621
+"""
+multiconf - support multiple configuration sources with order of precedence,
+based on immediacy.  Currently: Default values are overridden by values read
+from configuration file which in turn are overridden by values read from
+environment variables.
+"""
 
 import os
 import logging
@@ -12,6 +18,9 @@ class MissingConfiguration(Exception):
   """
 
 class MultiConfValue:
+  """
+  Basic configuration item and base class for more complex types.
+  """
 
   def __init__(self, key, value, mandatory=False):
     self._key = key
@@ -31,16 +40,40 @@ class MultiConfValue:
     self._value = value
 
 class MultiConfBoolean(MultiConfValue):
+  """
+  Configuration item where possible values are Boolean.
+  """
 
   @property
   def value(self):
-    if isinstance(self._value, bool):
+    if self._value is None or isinstance(self._value, bool):
       return self._value
     return self._value.lower() in ['true', 'yes', '1']
 
 class MultiConf:
+  """
+  Configuration class.  Initialized optionally with configuration items, then
+  additional items may be added explicitly (and must be if they are mandatory,
+  a specific type, etc.).  Once all items have been added the configuration is
+  finalized with parse(), validation checks are performed, and the realized
+  values can be extracted.
+  """
 
   def __init__(self, codename, map=None):
+    """
+    Initializes MultiConf class.
+
+    Args:
+      codename (str): Simple string which is assumed to prefix any related
+        environment variables associated with the configuration (along with an
+        underscore as separator), in order to avoid collisions in the
+        environment's namespace.  For example, for an `app_name` configuration
+        key, with a codename `MYAPP`, the corresponding environment variable
+        would be `MYAPP_APP_NAME`.
+      map (dict): Configuration options which are neither mandatory nor of a
+        specified type, specified as key, value pairs.
+    """
+
     self._codename = codename
     self._mandatory = []
     if map:
@@ -62,12 +95,44 @@ class MultiConf:
     return self._map[key].value
 
   def add(self, key, value=None, mandatory=False):
+    """
+    Add a configuration item.
+
+    Args:
+      key (str): Name of configuration item
+      value (whatever): Default value, None by default
+      mandatory (boolean): Whether item is mandatory or not, defaults to
+        False.
+    """
     self._add(MultiConfValue(key, value), mandatory)
 
   def add_boolean(self, key, value=None, mandatory=False):
+    """
+    Add a configuration item of type Boolean.
+
+    Args:
+      key (str): Name of configuration item
+      value (boolean): Default value, None by default
+      mandatory (boolean): Whether item is mandatory or not, defaults to
+        False.
+    """
     self._add(MultiConfBoolean(key, value), mandatory)
 
   def parse(self, default_config_file):
+    """
+    Takes configuration definition and default configuration file and reads in
+    configuration, overriding default values.  These are in turn overridden by
+    corresponding variables found in the environment, if any.  Basic
+    validations are performed.
+
+    Args:
+      default_config_file (str): Path to default configuration file.  This may
+        be overridden if an alternative configuration file is specified in the
+        environment.
+
+    Returns:
+      A dict of key-value configuration items.
+    """
 
     # add this to any environment variable names
     envprefix = self._codename + '_'
