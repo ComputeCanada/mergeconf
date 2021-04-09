@@ -22,10 +22,11 @@ class MultiConfValue:
   Basic configuration item and base class for more complex types.
   """
 
-  def __init__(self, key, value, mandatory=False):
+  def __init__(self, key, value, mandatory=False, type=str):
     self._key = key
     self._value = value
     self._mandatory = mandatory
+    self._type = type
 
   @property
   def key(self):
@@ -33,7 +34,7 @@ class MultiConfValue:
 
   @property
   def value(self):
-    return self._value
+    return self._type(self._value)
 
   @value.setter
   def value(self, value):
@@ -94,7 +95,7 @@ class MultiConf:
   def __getitem__(self, key):
     return self._map[key].value
 
-  def add(self, key, value=None, mandatory=False):
+  def add(self, key, value=None, mandatory=False, type=str):
     """
     Add a configuration item.
 
@@ -103,8 +104,9 @@ class MultiConf:
       value (whatever): Default value, None by default
       mandatory (boolean): Whether item is mandatory or not, defaults to
         False.
+      type (type): Type of value
     """
-    self._add(MultiConfValue(key, value), mandatory)
+    self._add(MultiConfValue(key, value, type=type), mandatory)
 
   def add_boolean(self, key, value=None, mandatory=False):
     """
