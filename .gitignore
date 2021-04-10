@@ -3,3 +3,4 @@
 **/*.pyc
 .venv
 .lintcache
+*.egg-info/
