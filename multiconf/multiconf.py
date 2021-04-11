@@ -10,60 +10,8 @@ import os
 import logging
 import configparser
 from multiconf import exceptions
+from multiconf.multiconfvalue import MultiConfValue
 
-
-class MultiConfValue:
-  """
-  Basic configuration item and base class for more complex types.
-  """
-
-  def __init__(self, key, value, mandatory=False, type=str):
-    self._key = key
-    self._mandatory = mandatory
-    self._type = type
-
-    if value is None:
-      self._value = value
-    else:
-      self._value = self._type(value)
-
-  @property
-  def key(self):
-    return self._key
-
-  @property
-  def value(self):
-    return self._value
-
-  @value.setter
-  def value(self, value):
-    if value is None:
-      self._value = value
-    else:
-      self._value = self._type(value)
-
-
-# pylint: disable=super-init-not-called
-class MultiConfBoolean(MultiConfValue):
-  """
-  Configuration item where possible values are Boolean.
-  """
-
-  def __init__(self, key, value, mandatory=False):
-    self._key = key
-    self._mandatory = mandatory
-    self._value = value
-
-  @property
-  def value(self):
-    return self._value
-
-  @value.setter
-  def value(self, value):
-    if value is None:
-      self._value = value
-    else:
-      self._value = value.lower() in ['true', 'yes', '1']
 
 class MultiConf():
   """
@@ -124,15 +72,19 @@ class MultiConf():
 
   def add_boolean(self, key, value=None, mandatory=False):
     """
-    Add a configuration item of type Boolean.
+    _Deprecated._  Add a configuration item of type Boolean.
 
     Args:
       key (str): Name of configuration item
       value (boolean): Default value, None by default
       mandatory (boolean): Whether item is mandatory or not, defaults to
         False.
+
+    Note: This is deprecated; simply use `add` with `type=bool`.  This will be
+      removed in a future release.
     """
-    self._add(MultiConfBoolean(key, value), mandatory)
+    logging.warning("`add_boolean()` is deprecated and will be removed.  Please use `add(type=bool)`.")
+    self.add(key, value, type=bool, mandatory=mandatory)
 
   def parse(self, default_config_file=None):
     """
