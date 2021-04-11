@@ -3,14 +3,14 @@
 import os
 import pytest
 from tests.fixtures import config, codename
-from multiconf import multiconf
+from multiconf import multiconf, exceptions
 
 def test_no_config(config):
   """
   Tests we are able to parse an empty configuration, except it will fail on
   missing mandatory fields.
   """
-  with pytest.raises(multiconf.MissingConfiguration) as e:
+  with pytest.raises(exceptions.MissingConfiguration) as e:
     config.parse()
   assert e.value.missing == ['SECTION1_SHAPE']
 

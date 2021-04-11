@@ -9,24 +9,7 @@ environment variables.
 import os
 import logging
 import configparser
-
-
-class MissingConfiguration(Exception):
-  """
-  Raised if mandatory configuration items are missing.
-
-  Attributes:
-    missing: list of missing variables' keys
-  """
-
-  def __init__(self, missingvars):
-    self._missing = missingvars
-    description = 'Undefined mandatory variables: {}'.format(', '.join(missingvars))
-    super().__init__(description)
-
-  @property
-  def missing(self):
-    return self._missing
+from multiconf import exceptions
 
 
 class MultiConfValue:
@@ -221,4 +204,4 @@ class MultiConf():
       if self._map[key].value is None:
         unfulfilled.append(key)
     if unfulfilled:
-      raise MissingConfiguration(unfulfilled)
+      raise exceptions.MissingConfiguration(unfulfilled)
