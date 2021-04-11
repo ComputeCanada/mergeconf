@@ -17,3 +17,13 @@ class MissingConfiguration(Exception):
   @property
   def missing(self):
     return self._missing
+
+class MissingConfigurationFile(Exception):
+  """
+  Raised if the specified configuration file is missing or otherwise
+  unreadable.
+  """
+
+  def __init__(self):
+    description = 'Configuration file missing or unreadable'
+    super().__init__(description)

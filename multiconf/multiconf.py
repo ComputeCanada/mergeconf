@@ -121,14 +121,9 @@ class MultiConf():
       config_from_file = configparser.ConfigParser(delimiters='=', interpolation=None)
 
       # read configuration
-      config_from_file.read(config_file)
-
-      # flag if configuration specified but not found
-      if envprefix + 'CONFIG' in os.environ and not config_from_file:
-        logging.error(
-          "Configuration file '%s' specified but cannot be read",
-          os.environ[envprefix + 'CONFIG']
-        )
+      parsed_files = config_from_file.read(config_file)
+      if not parsed_files:
+        raise exceptions.MissingConfigurationFile
 
       # copy in anything from the configuration
       for section in config_from_file:
