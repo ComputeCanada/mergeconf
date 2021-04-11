@@ -1,2 +1,6 @@
 pytest>=6.2.3
+pytest-cov>=2.8.1
+
+# I prefer to lock pylint to specific versions and upgrade carefully,
+# or CI can break on code that wasn't touched due to new lint errors
 pylint==2.6.0
