@@ -20,5 +20,8 @@ def config():
   conf.add('SECTION1_COLOUR', value='black')
   conf.add('SECTION1_SHAPE', mandatory=True)
   conf.add_boolean('SECTION1_UPSIDEDOWN')
+  conf.add_boolean('SECTION1_RIGHTSIDEUP', value=True)
+  conf.add('SECTION2_COUNT', type=int)
+  conf.add('SECTION2_RATIO', type=float)
 
   return conf
