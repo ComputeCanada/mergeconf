@@ -5,6 +5,19 @@ import pytest
 from tests.fixtures import config, codename
 from multiconf import multiconf, exceptions
 
+# ---------------------------------------------------------------------------
+#                                                             helpers
+# ---------------------------------------------------------------------------
+
+def clean_up_env(codename):
+  for key in os.environ:
+    if key.startswith(codename):
+      del os.environ[key]
+
+# ---------------------------------------------------------------------------
+#                                                             tests
+# ---------------------------------------------------------------------------
+
 def test_no_config(config):
   """
   Tests we are able to parse an empty configuration, except it will fail on
@@ -30,16 +43,19 @@ def test_config_only_env(config):
   assert config['SECTION2_COUNT'] == 10
   assert config['SECTION2_RATIO'] == 10.425
 
+  # clean up environment
+  clean_up_env(codename)
+
 def test_config_only_file(config):
   """
   Tests we are able to correctly parse a config defined only in a file.
   """
-  config.parse('test1.conf')
+  config.parse('tests/test1.conf')
   assert config['SECTION1_SHAPE'] == 'circle'
   assert config['SECTION1_UPSIDEDOWN'] == False
   assert config['SECTION1_RIGHTSIDEUP'] == True
   assert config['SECTION2_COUNT'] == 10
-  assert config['SECTION2_RATIO'] == 10.425
+  assert config['SECTION2_RATIO'] == 20.403
 
 def test_config_file_and_env(config):
   """
@@ -49,9 +65,21 @@ def test_config_file_and_env(config):
   os.environ[codename + "_SECTION1_SHAPE"] = 'triangle'
   os.environ[codename + "_SECTION1_UPSIDEDOWN"] = 'true'
   os.environ[codename + "_SECTION2_COUNT"] = '15'
-  config.parse('test1.conf')
+  config.parse('tests/test1.conf')
   assert config['SECTION1_SHAPE'] == 'triangle'
   assert config['SECTION1_UPSIDEDOWN'] == True
   assert config['SECTION1_RIGHTSIDEUP'] == True
   assert config['SECTION2_COUNT'] == 15
-  assert config['SECTION2_RATIO'] == 10.425
+  assert config['SECTION2_RATIO'] == 20.403
+
+  # clean up environment
+  clean_up_env(codename)
+
+def test_config_missing_file(config):
+  """
+  Tests we handle a missing config file.
+  """
+  os.environ[codename + "_CONFIG"] = 'test2_missing.conf'
+  with pytest.raises(exceptions.MissingConfigurationFile) as e:
+    config.parse('test2_missing.conf')
+  assert e
