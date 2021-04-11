@@ -60,16 +60,27 @@ class MultiConfValue:
       self._value = self._type(value)
 
 
+# pylint: disable=super-init-not-called
 class MultiConfBoolean(MultiConfValue):
   """
   Configuration item where possible values are Boolean.
   """
 
+  def __init__(self, key, value, mandatory=False):
+    self._key = key
+    self._mandatory = mandatory
+    self._value = value
+
   @property
   def value(self):
-    if self._value is None or isinstance(self._value, bool):
-      return self._value
-    return self._value.lower() in ['true', 'yes', '1']
+    return self._value
+
+  @value.setter
+  def value(self, value):
+    if value is None:
+      self._value = value
+    else:
+      self._value = value.lower() in ['true', 'yes', '1']
 
 class MultiConf():
   """
@@ -113,7 +124,6 @@ class MultiConf():
       self._mandatory.append(item.key)
 
   def __getitem__(self, key):
-    print("In __getitem__ to get key '{}'".format(key))
     return self._map[key].value
 
   def add(self, key, value=None, mandatory=False, type=str):
@@ -200,7 +210,10 @@ class MultiConf():
 
     # override with environment variables
     for (key, value) in envvars.items():
-      self._map[key].value = value
+      if key in self._map:
+        self._map[key].value = value
+      else:
+        logging.warning('Environment variable %s was set but is not used', envprefix + key)
 
     # test that mandatory value have been set
     unfulfilled = []
