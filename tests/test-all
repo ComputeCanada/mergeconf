@@ -1,0 +1,90 @@
+#!/bin/sh
+# Git apparently always sets the working directory to the root of the
+# workspace, so using relative paths from there is fine.
+
+# --------------------------------------------------------------------------
+#                                                            functions
+# --------------------------------------------------------------------------
+
+fail_to()
+{
+  echo Unable to $@
+  exit 1
+}
+
+# --------------------------------------------------------------------------
+#                                                         argument parsing
+# --------------------------------------------------------------------------
+
+usage()
+{
+  cat <<EOF
+Usage: $(basename $0) [options]
+Options:
+  --no-linting:   Skip lint testing
+  -x|--exitfirst: [pytest] Exit at first failed test
+  -v|--verbose:   [pytest] Show verbose information
+  -d|--debug:     [pytest] Show debug-level logging
+EOF
+}
+
+# get arguments
+linting=1
+exitfirst=0
+verbose=0
+debug=0
+while [ -n "$1" ]
+do
+  case "$1" in
+    --no-linting)
+      linting=0
+      ;;
+    -d|--debug)
+      debug=1
+      ;;
+    -v|--verbose)
+      verbose=1
+      ;;
+    -x|--exitfirst)
+      exitfirst=1
+      ;;
+    -h|--help)
+      usage
+      exit
+      ;;
+    *)
+      echo "Unrecognized option: $1"
+      usage
+      exit 1
+  esac
+  shift
+done
+
+pytest_opts="--cov=multiconf --cov-report=term --cov-report=html"
+if (( debug ))
+then
+  pytest_opts="$pytest_opts --log-level=debug"
+fi
+if (( verbose ))
+then
+  pytest_opts="$pytest_opts -v"
+fi
+if (( exitfirst ))
+then
+  pytest_opts="$pytest_opts -x"
+fi
+
+# --------------------------------------------------------------------------
+#                                                     actually doing stuff
+# --------------------------------------------------------------------------
+
+export PYTHONPATH=.:$PYTHONPATH
+
+# linting
+if (( linting ))
+then
+  tests/linting/test-all || exit 1
+fi
+
+# functional testing
+pytest $pytest_opts || exit 1
