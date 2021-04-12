@@ -35,12 +35,18 @@ class MultiConf():
         would be `MYAPP_APP_NAME`.
       map (dict): Configuration options which are neither mandatory nor of a
         specified type, specified as key, value pairs.
+
+    Note: The `map` argument is probably to be deprecated and removed at a
+      later date.  Its utility is limited and should be avoided.
     """
 
     self._codename = codename
     self._mandatory = []
     if map:
       self._map = map
+      logging.warning("Support for `map` argument is deprecated and will " \
+        "be removed.  Please use `add()` to add configuration options and " \
+        "their specifications, including default values.")
     else:
       self._map = {}
 
