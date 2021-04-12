@@ -68,6 +68,8 @@ class MultiConf():
         False.
       type (type): Type of value
     """
+    if type not in [bool, int, float, str]:
+      raise exceptions.UnsupportedType(type)
     self._add(MultiConfValue(key, value, type=type), mandatory)
 
   def add_boolean(self, key, value=None, mandatory=False):

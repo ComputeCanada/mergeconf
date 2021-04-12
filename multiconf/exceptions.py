@@ -27,3 +27,20 @@ class MissingConfigurationFile(Exception):
   def __init__(self):
     description = 'Configuration file missing or unreadable'
     super().__init__(description)
+
+class UnsupportedType(Exception):
+  """
+  Raised if a configuration item is added with an unsupported type.
+
+  Attributes:
+    type: the unsupported type
+  """
+
+  def __init__(self, type):
+    self._type = type.__name__
+    description = 'Unsupported type: {}'.format(self._type)
+    super().__init__(description)
+
+  @property
+  def type(self):
+    return self._type

@@ -83,3 +83,12 @@ def test_config_missing_file(config):
   with pytest.raises(exceptions.MissingConfigurationFile) as e:
     config.parse('test2_missing.conf')
   assert e
+
+def test_unsupported_type():
+  """
+  Tests the attempted use of an unsupported type throws an exception.
+  """
+  conf = multiconf.MultiConf('test')
+  with pytest.raises(exceptions.UnsupportedType) as e:
+    conf.add('SECTION1_NAME', type=list)
+  assert e.value.type == 'list'
