@@ -1,19 +1,19 @@
 # vi: set softtabstop=2 ts=2 sw=2 expandtab:
 # pylint: disable=W0621
 """
-multiconf - support multiple configuration sources with order of precedence,
-based on immediacy.  Currently: Default values are overridden by values read
-from configuration file which in turn are overridden by values read from
-environment variables.
+mergeconf - build a single configuration by merging multiple configuration
+sources with order of precedence, based on immediacy.  Currently: Default
+values are overridden by values read from configuration file which in turn are
+overridden by values read from environment variables.
 """
 import os
 import logging
 import configparser
-from multiconf import exceptions
-from multiconf.multiconfvalue import MultiConfValue
+from mergeconf import exceptions
+from mergeconf.mergeconfvalue import MergeConfValue
 
 
-class MultiConf():
+class MergeConf():
   """
   Configuration class.  Initialized optionally with configuration items, then
   additional items may be added explicitly (and must be if they are mandatory,
@@ -24,7 +24,7 @@ class MultiConf():
 
   def __init__(self, codename, map=None):
     """
-    Initializes MultiConf class.
+    Initializes MergeConf class.
 
     Args:
       codename (str): Simple string which is assumed to prefix any related
@@ -76,7 +76,7 @@ class MultiConf():
     """
     if type not in [bool, int, float, str]:
       raise exceptions.UnsupportedType(type)
-    self._add(MultiConfValue(key, value, type=type), mandatory)
+    self._add(MergeConfValue(key, value, type=type), mandatory)
 
   def add_boolean(self, key, value=None, mandatory=False):
     """

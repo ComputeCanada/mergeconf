@@ -1,22 +1,20 @@
-# module `multiconf`
+# module `mergeconf`
 
-multiconf - support multiple configuration sources with order of precedence,
-based on immediacy.  Currently: Default values are overridden by values read
-from configuration file which in turn are overridden by values read from
-environment variables.
+mergeconf - build a single configuration by merging  multiple configuration
+sources with order of precedence, based on immediacy.  Currently: Default
+values are overridden by values read from configuration file which in turn are
+overridden by values read from environment variables.
 
-  * [class `MissingConfiguration`](#class-MissingConfiguration)
-  * [class `MultiConf`](#class-MultiConf)
+* [module `mergeconf`](#module-mergeconf)
+  * [class `MergeConf`](#class-MergeConf)
     * [function `__init__`](#function-__init__)
     * [function `add`](#function-add)
     * [function `add_boolean`](#function-add_boolean)
     * [function `parse`](#function-parse)
+  * [class `MergeConfValue`](#class-MergeConfValue)
 
-## class `MissingConfiguration`
 
-Raised if mandatory configuration items are missing.
-
-## class `MultiConf`
+## class `MergeConf`
 
 Configuration class.  Initialized optionally with configuration items, then
 additional items may be added explicitly (and must be if they are mandatory,
@@ -26,7 +24,7 @@ values can be extracted.
 
 ### function `__init__`
 
-Initializes MultiConf class.
+Initializes MergeConf class.
 
 Args:
   * `codename` (**str**): Simple string which is assumed to prefix any related
@@ -38,6 +36,9 @@ Args:
   * `map` (**dict**): Configuration options which are neither mandatory nor of a
     specified type, specified as key, value pairs.
 
+Note: The `map` argument is probably to be deprecated and removed at a
+  later date.  Its utility is limited and should be avoided.
+
 ### function `add`
 
 Add a configuration item.
@@ -47,16 +48,20 @@ Args:
   * `value` (**whatever**): Default value, None by default
   * `mandatory` (**boolean**): Whether item is mandatory or not, defaults to
     False.
+  * `type` (**type**): Type of value
 
 ### function `add_boolean`
 
-Add a configuration item of type Boolean.
+_Deprecated._  Add a configuration item of type Boolean.
 
 Args:
   * `key` (**str**): Name of configuration item
   * `value` (**boolean**): Default value, None by default
   * `mandatory` (**boolean**): Whether item is mandatory or not, defaults to
     False.
+
+Note: This is deprecated; simply use `add` with `type=bool`.  This will be
+  removed in a future release.
 
 ### function `parse`
 
@@ -72,3 +77,9 @@ Args:
 
 Returns:
   A dict of key-value configuration items.
+
+## class `MergeConfValue`
+
+Basic configuration item and base class for more complex types.
+
+

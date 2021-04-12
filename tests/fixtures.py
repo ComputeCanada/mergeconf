@@ -1,7 +1,7 @@
 # vi: set softtabstop=2 ts=2 sw=2 expandtab:
 # pylint:
 import pytest
-from multiconf import multiconf
+from mergeconf import mergeconf
 
 # used to prefix environment variables
 codename = 'test'
@@ -12,8 +12,8 @@ def config():
   Create a full configuration using all of the features.
   """
 
-  # create multiconf object for configuration
-  conf = multiconf.MultiConf('test')
+  # create mergeconf object for configuration
+  conf = mergeconf.MergeConf('test')
 
   # add configuration items of various types
   conf.add('SECTION1_NAME')
@@ -40,8 +40,8 @@ def config_with_defaults():
     'SECTION2_Z_INDEX': 12
   }
 
-  # create multiconf object for configuration
-  conf = multiconf.MultiConf('test', map=defaults)
+  # create mergeconf object for configuration
+  conf = mergeconf.MergeConf('test', map=defaults)
 
   # add configuration items of various types
   conf.add('SECTION1_NAME')

@@ -2,7 +2,7 @@
 # pylint: disable=W0621
 
 
-class MultiConfValue:
+class MergeConfValue:
   """
   Basic configuration item and base class for more complex types.
   """

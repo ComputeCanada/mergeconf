@@ -60,7 +60,7 @@ do
   shift
 done
 
-pytest_opts="--cov=multiconf --cov-report=term --cov-report=html"
+pytest_opts="--cov=mergeconf --cov-report=term --cov-report=html"
 if (( debug ))
 then
   pytest_opts="$pytest_opts --log-level=debug"

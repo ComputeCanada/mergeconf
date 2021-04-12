@@ -3,7 +3,7 @@
 import os
 import pytest
 from tests.fixtures import config, config_with_defaults, codename
-from multiconf import multiconf, exceptions
+from mergeconf import mergeconf, exceptions
 
 # ---------------------------------------------------------------------------
 #                                                             helpers
@@ -88,7 +88,7 @@ def test_unsupported_type():
   """
   Tests the attempted use of an unsupported type throws an exception.
   """
-  conf = multiconf.MultiConf('test')
+  conf = mergeconf.MergeConf('test')
   with pytest.raises(exceptions.UnsupportedType) as e:
     conf.add('SECTION1_NAME', type=list)
   assert e.value.type == 'list'
