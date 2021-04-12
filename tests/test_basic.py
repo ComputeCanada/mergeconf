@@ -2,7 +2,7 @@
 # pylint: disable=unused-import,singleton-comparison
 import os
 import pytest
-from tests.fixtures import config, codename
+from tests.fixtures import config, config_with_defaults, codename
 from multiconf import multiconf, exceptions
 
 # ---------------------------------------------------------------------------
@@ -92,3 +92,18 @@ def test_unsupported_type():
   with pytest.raises(exceptions.UnsupportedType) as e:
     conf.add('SECTION1_NAME', type=list)
   assert e.value.type == 'list'
+
+def test_default_values(config_with_defaults):
+  """
+  Tests a configuration initialized with defaults via a map.
+  """
+  config_with_defaults.parse('tests/test2.conf')
+  assert config_with_defaults['SECTION1_SHAPE'] == 'rectangle'
+  assert config_with_defaults['SECTION1_COLOUR'] == 'blue'
+  assert config_with_defaults['SECTION1_UPSIDEDOWN'] == False
+  assert config_with_defaults['SECTION1_RIGHTSIDEUP'] == True
+  assert config_with_defaults['SECTION2_COUNT'] == 10
+  assert config_with_defaults['SECTION2_RATIO'] == 20.403
+
+  # this is part of why the map thing is deprecated
+  assert config_with_defaults['SECTION2_Z_INDEX'] == '12'

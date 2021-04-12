@@ -25,3 +25,30 @@ def config():
   conf.add('SECTION2_RATIO', type=float)
 
   return conf
+
+@pytest.fixture
+def config_with_defaults():
+  """
+  Create a full configuration including some defaults.
+  """
+
+  # set some basic defaults
+  defaults = {
+    'SECTION1_COLOUR': 'blue',
+    'SECTION1_SHAPE': 'triangle',
+    'SECTION2_COUNT': 13,
+    'SECTION2_Z_INDEX': 12
+  }
+
+  # create multiconf object for configuration
+  conf = multiconf.MultiConf('test', map=defaults)
+
+  # add configuration items of various types
+  conf.add('SECTION1_NAME')
+  conf.add('SECTION1_SHAPE', mandatory=True)
+  conf.add_boolean('SECTION1_UPSIDEDOWN')
+  conf.add_boolean('SECTION1_RIGHTSIDEUP', value=True)
+  conf.add('SECTION2_COUNT', type=int)
+  conf.add('SECTION2_RATIO', type=float)
+
+  return conf
