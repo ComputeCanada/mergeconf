@@ -1,12 +1,13 @@
 CHANGELOG	:= CHANGELOG.md
 SOURCES		:= mergeconf/*.py
-VERSION		:= $(shell git describe | sed 's/^v//')
+VERSION		:= $(shell git describe --tags | sed -e 's/^v//' -e 's/-/+/' -e 's/-/./g')
 PACKAGES	:= dist/mergeconf-$(VERSION)-py3-none-any.whl dist/mergeconf-$(VERSION).tar.gz
 
 all: $(PACKAGES)
 
-.PHONY: $(CHANGELOG)
-$(CHANGELOG):
+.PHONY: release
+release:
+	@sed -i '' -e 's/\(version =\) .*/\1 '$(VERSION)'/' setup.cfg
 	@printf "# Changelog\n\n" > $(CHANGELOG)
 	@format='## %(tag) (%(*committerdate:format:%Y-%m-%d)) %(subject)%0a%0a%(body)' ; \
         tags=`git for-each-ref refs/tags \
@@ -16,13 +17,20 @@ $(CHANGELOG):
                 --format="$$format" $$tags \
 	>> $(CHANGELOG)
 
+# fails if version doesn't match specific pattern, so as not to publish
+# development version.
+.PHONY: checkversion
+checkversion:
+	@echo "Checking that $(VERSION) is a release version"
+	@[[ $(VERSION) =~ ^([0-9]+\.)*[0-9]+$$ ]]
+
 $(PACKAGES): $(SOURCES)
-	@sed -i 's/\(version =\) .*/\1 '$(VERSION)'/' setup.cfg
+	@echo Version: $(VERSION)
+	@sed -i '' -e 's/\(version =\) .*/\1 '$(VERSION)'/' setup.cfg
 	@python3 -m build
 
-upload-test: $(PACKAGES)
-	@python3 -m twine upload --repository testpypi dist/mergeconf-$(VERSION){.tar.gz,-none-any.whl}
+upload-test: $(PACKAGES) checkversion
+	@python3 -m twine upload --repository testpypi $(PACKAGES)
 
-upload: $(PACKAGES)
-	@python3 -m twine upload --repository pypi dist/mergeconf-$(VERSION){.tar.gz,-none-any.whl}
-	
+upload: $(PACKAGES) checkversion
+	@python3 -m twine upload --repository pypi $(PACKAGES)
