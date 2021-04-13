@@ -9,10 +9,6 @@ stages:
   - linting
   - testing
 
-default:
-  tags:
-    - unprivileged
-
 todos:
   except:
     - main
