@@ -1,7 +1,18 @@
 # Changelog
 
-## v0.1 - 20201222
+## v0.2 (2021-04-13) First packaged release
 
-First implementation.
+First semi-mature release ready for use by the world.
+
+Added:
+* Support for specific types (int, float) as well as str and bool.
+  Support for boolean values normalized to be consistent with other
+  types.
+
+Updated:
+* Improved error handling.
+
+## v0.1 (2020-12-22) First implementation.
 
 * Reads from environment, configuration file
+
