@@ -7,6 +7,11 @@ file is just for me to remember how to publish a release.
 
 This is to be carried out on the main branch.
 
+*Note* This procedure is imperfect.  Once the CHANGELOG is created it can't be
+committed back to the earlier commit; this causes a divergence in the commit
+path just before the tag.  The current workaround is to delete the tag after
+updating the changelog and recreating it.
+
 1. Create an annotated tag for the release.  This should be descriptive of the
 changes since the last release including new features, updates, and bug fixes.
 For example:
@@ -28,7 +33,7 @@ changelog.  `CHANGELOG.md` is generated automatically from annotations on
 tags.
 
     $ make release
-    
+
 3. Add `CHANGELOG.md` and `setup.cfg` and ensure they are covered under the
 previously generated commit.
 
