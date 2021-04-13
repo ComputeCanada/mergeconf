@@ -3,10 +3,11 @@ image: dleskecc/tester.py
 
 variables:
   GIT_SUBMODULE_STRATEGY: normal
-  PYLINTRC: .tests/extras/pylintrc
+  PYLINTRC: tests/linting/extras/pylintrc
 
 stages:
   - linting
+  - testing
 
 default:
   tags:
@@ -18,7 +19,7 @@ todos:
   allow_failure: true
   stage: linting
   script:
-    - .tests/todos
+    - tests/linting/todos
 
 todos_main:
   only:
@@ -26,7 +27,7 @@ todos_main:
   allow_failure: true
   stage: linting
   script:
-    - .tests/todos && true; todos=$?
+    - tests/linting/todos && true; todos=$?
     - anybadge --label=todos --value=$todos --value-format=" %d " --file=todos.svg --use-max 1=green 5=yellow 10=orange 20=red
     - test $todos -eq 0
   artifacts:
@@ -37,4 +38,9 @@ todos_main:
 syntax:
   stage: linting
   script:
-    - .tests/test-all
+    - tests/linting/test-all
+
+functional:
+  stage: testing
+  script:
+    - tests/test-all
