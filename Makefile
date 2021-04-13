@@ -23,14 +23,15 @@ release:
 checkversion:
 	@echo "Checking that $(VERSION) is a release version"
 	@[[ $(VERSION) =~ ^([0-9]+\.)*[0-9]+$$ ]]
+	@echo "Checking that $(VERSION) is in setup.cfg"
+	@grep -qw "$(VERSION)" setup.cfg
 
 $(PACKAGES): $(SOURCES)
 	@echo Version: $(VERSION)
-	@sed -i '' -e 's/\(version =\) .*/\1 '$(VERSION)'/' setup.cfg
 	@python3 -m build
 
-upload-test: $(PACKAGES) checkversion
+publish-test: $(PACKAGES) checkversion
 	@python3 -m twine upload --repository testpypi $(PACKAGES)
 
-upload: $(PACKAGES) checkversion
+publish: $(PACKAGES) checkversion
 	@python3 -m twine upload --repository pypi $(PACKAGES)
