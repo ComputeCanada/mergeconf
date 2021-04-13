@@ -110,7 +110,9 @@ class MergeConf():
     # get all environment variables starting with that prefix into dict with
     # prefix stripped from key
     envvars = {
-      x[0].removeprefix(envprefix): x[1]
+      # in Python 3.9, `split(envprefix, 1)[1]` can be replaced with
+      # `removeprefix(envprefix)`
+      x[0].split(envprefix, 1)[1]: x[1]
       for x in os.environ.items() if x[0].startswith(envprefix)
     }
 
