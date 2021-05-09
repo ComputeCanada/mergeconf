@@ -127,7 +127,7 @@ class MergeConf():
       # read configuration
       parsed_files = config_from_file.read(config_file)
       if not parsed_files:
-        raise exceptions.MissingConfigurationFile
+        raise exceptions.MissingConfigurationFile(config_file)
 
       # copy in anything from the configuration
       for section in config_from_file:

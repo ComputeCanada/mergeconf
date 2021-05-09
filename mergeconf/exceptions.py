@@ -22,11 +22,19 @@ class MissingConfigurationFile(Exception):
   """
   Raised if the specified configuration file is missing or otherwise
   unreadable.
+
+  Attributes:
+    file: the missing file
   """
 
-  def __init__(self):
-    description = 'Configuration file missing or unreadable'
+  def __init__(self, file):
+    self._file = file
+    description = 'Configuration file missing or unreadable: {}'.format(file)
     super().__init__(description)
+
+  @property
+  def file(self):
+    return self._file
 
 class UnsupportedType(Exception):
   """

@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.3 (2021-05-09) Minor tweaks
+
+Added:
+* MissingConfigurationFile exception has `file` attribute for the missing
+  filename.
+
 ## v0.2 (2021-04-13) First packaged release
 
 First semi-mature release ready for use by the world.
