@@ -3,7 +3,7 @@
 import os
 import pytest
 from tests.fixtures import config, config_with_defaults, codename
-from mergeconf import mergeconf, exceptions
+import mergeconf
 
 # ---------------------------------------------------------------------------
 #                                                             helpers
@@ -23,7 +23,7 @@ def test_no_config(config):
   Tests we are able to parse an empty configuration, except it will fail on
   missing mandatory fields.
   """
-  with pytest.raises(exceptions.MissingConfiguration) as e:
+  with pytest.raises(mergeconf.MissingConfiguration) as e:
     config.parse()
   assert e.value.missing == ['SECTION1_SHAPE']
 
@@ -80,16 +80,17 @@ def test_config_missing_file(config):
   Tests we handle a missing config file.
   """
   os.environ[codename + "_CONFIG"] = 'test2_missing.conf'
-  with pytest.raises(exceptions.MissingConfigurationFile) as e:
+  with pytest.raises(mergeconf.MissingConfigurationFile) as e:
     config.parse('test2_missing.conf')
   assert e
+  assert e.value.file == 'test2_missing.conf'
 
 def test_unsupported_type():
   """
   Tests the attempted use of an unsupported type throws an exception.
   """
   conf = mergeconf.MergeConf('test')
-  with pytest.raises(exceptions.UnsupportedType) as e:
+  with pytest.raises(mergeconf.UnsupportedType) as e:
     conf.add('SECTION1_NAME', type=list)
   assert e.value.type == 'list'
 
