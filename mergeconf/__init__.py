@@ -7,3 +7,4 @@ values are overridden by values read from configuration file which in turn are
 overridden by values read from environment variables.
 """
 from .mergeconf import MergeConf
+from .exceptions import *
