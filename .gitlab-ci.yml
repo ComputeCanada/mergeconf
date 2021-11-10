@@ -40,4 +40,5 @@ syntax:
 functional:
   stage: testing
   script:
+    - pip install -r tests/requirements.txt
     - tests/test-all
