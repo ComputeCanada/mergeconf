@@ -34,6 +34,7 @@ todos_main:
 syntax:
   stage: linting
   script:
+    - pip install -r tests/requirements.txt
     - tests/linting/test-all
 
 functional:
