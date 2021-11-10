@@ -6,6 +6,9 @@ import configparser
 from mergeconf import exceptions
 from mergeconf.mergeconfvalue import MergeConfValue
 
+# using this allows the use of a parameter `type`, for which I can't find a
+# reasonable replacement (like `klass` for `class`)
+builtin_type = type
 
 class MergeConf():
   """
@@ -36,28 +39,37 @@ class MergeConf():
 
     self._codename = codename
     self._mandatory = []
+    self._map = {}
     if map:
       self._map = map
       logging.warning("Support for `map` argument is deprecated and will " \
         "be removed.  Please use `add()` to add configuration options and " \
         "their specifications, including default values.")
-    else:
-      self._map = {}
 
-    for key, value in self._map.items():
-      self.add(key, value)
+      for key, value in self._map.items():
+        type = builtin_type(value)
+        if type not in [bool, int, float, str]:
+          type = str
+        self.add(key, value, type=type)
 
   def _add(self, item, mandatory):
+    default = self._map.get(item.key, None)
+    if default and not item.value:
+      item.value = default.value
     self._map[item.key] = item
 
     # remember it's mandatory
     if mandatory:
       self._mandatory.append(item.key)
 
+  def __iter__(self):
+    for key, value in self._map.items():
+      yield (key, value.value)
+
   def __getitem__(self, key):
     return self._map[key].value
 
-  def add(self, key, value=None, mandatory=False, type=str):
+  def add(self, key, value=None, mandatory=False, type=None):
     """
     Add a configuration item.
 
@@ -67,9 +79,19 @@ class MergeConf():
       mandatory (boolean): Whether item is mandatory or not, defaults to
         False.
       type (type): Type of value
+
+    Notes: Type detection is attempted if not specified
     """
-    if type not in [bool, int, float, str]:
+    if type and type not in [bool, int, float, str]:
       raise exceptions.UnsupportedType(type)
+    if not type:
+      if value is None:
+        type = str
+      else:
+        type = builtin_type(value)
+        if type not in [bool, int, float, str]:
+          type = str
+
     self._add(MergeConfValue(key, value, type=type), mandatory)
 
   def add_boolean(self, key, value=None, mandatory=False):
