@@ -1,5 +1,8 @@
 # vi: set softtabstop=2 ts=2 sw=2 expandtab:
 # pylint: disable=W0621
+"""
+Exceptions raised by MergeConf package.
+"""
 
 class MissingConfiguration(Exception):
   """

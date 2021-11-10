@@ -5,6 +5,10 @@ mergeconf - build a single configuration by merging multiple configuration
 sources with order of precedence, based on immediacy.  Currently: Default
 values are overridden by values read from configuration file which in turn are
 overridden by values read from environment variables.
+
+## Examples
+
+How to use this library.
 """
 from .mergeconf import MergeConf
-from .exceptions import *
+from . import exceptions
