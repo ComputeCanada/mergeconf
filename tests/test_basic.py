@@ -23,9 +23,30 @@ def test_no_config(config):
   Tests we are able to parse an empty configuration, except it will fail on
   missing mandatory fields.
   """
-  with pytest.raises(mergeconf.MissingConfiguration) as e:
+  with pytest.raises(mergeconf.exceptions.MissingConfiguration) as e:
     config.parse()
   assert e.value.missing == ['SECTION1_SHAPE']
+
+def test_no_config_map(config_with_defaults):
+  """
+  Tests we are able to parse an empty configuration and get a map back.
+  """
+  config_with_defaults.parse()
+  assert config_with_defaults['SECTION1_SHAPE'] == 'triangle'
+
+  d = dict(config_with_defaults)
+  print(d)
+  assert d == {
+    'SECTION1_NAME': None,
+    'SECTION1_COLOUR': 'blue',
+    'SECTION1_UPSIDEDOWN': None,
+    'SECTION1_RIGHTSIDEUP': True,
+    'SECTION1_SHAPE': 'triangle',
+    'SECTION2_COUNT': 13,
+    'SECTION2_Z_INDEX': 12,
+    'SECTION2_RATIO': None,
+    'SECTION2_FERBS': '[1, 2, 3, 4]'
+  }
 
 def test_config_only_env(config):
   """
@@ -80,7 +101,7 @@ def test_config_missing_file(config):
   Tests we handle a missing config file.
   """
   os.environ[codename + "_CONFIG"] = 'test2_missing.conf'
-  with pytest.raises(mergeconf.MissingConfigurationFile) as e:
+  with pytest.raises(mergeconf.exceptions.MissingConfigurationFile) as e:
     config.parse('test2_missing.conf')
   assert e
   assert e.value.file == 'test2_missing.conf'
@@ -90,7 +111,7 @@ def test_unsupported_type():
   Tests the attempted use of an unsupported type throws an exception.
   """
   conf = mergeconf.MergeConf('test')
-  with pytest.raises(mergeconf.UnsupportedType) as e:
+  with pytest.raises(mergeconf.exceptions.UnsupportedType) as e:
     conf.add('SECTION1_NAME', type=list)
   assert e.value.type == 'list'
 
@@ -105,6 +126,23 @@ def test_default_values(config_with_defaults):
   assert config_with_defaults['SECTION1_RIGHTSIDEUP'] == True
   assert config_with_defaults['SECTION2_COUNT'] == 10
   assert config_with_defaults['SECTION2_RATIO'] == 20.403
+  assert config_with_defaults['SECTION2_Z_INDEX'] == 12
 
-  # this is part of why the map thing is deprecated
-  assert config_with_defaults['SECTION2_Z_INDEX'] == '12'
+def test_add_with_defaults(config_with_defaults):
+  """
+  Tests a configuration initialized with defaults via a map.
+  """
+  config_with_defaults.add('SECTION2_FEELS', value='heavy')
+  config_with_defaults.add('SECTION2_WIDTH', value=10)
+  config_with_defaults.add('SECTION2_TRANSPARENT', value=False)
+  config_with_defaults.add('SECTION2_FERBITY', value=4.2)
+  config_with_defaults.add('SECTION2_FERBS', value=[1, 2, 3, 4])
+  config_with_defaults.parse()
+
+  # basically ensure none of the above become strings unless they already
+  # are, or are an unsupported type
+  assert config_with_defaults['SECTION2_FEELS'] == 'heavy'
+  assert config_with_defaults['SECTION2_WIDTH'] == 10
+  assert config_with_defaults['SECTION2_TRANSPARENT'] == False
+  assert config_with_defaults['SECTION2_FERBITY'] == 4.2
+  assert config_with_defaults['SECTION2_FERBS'] == '[1, 2, 3, 4]'

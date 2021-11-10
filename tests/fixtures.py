@@ -37,7 +37,8 @@ def config_with_defaults():
     'SECTION1_COLOUR': 'blue',
     'SECTION1_SHAPE': 'triangle',
     'SECTION2_COUNT': 13,
-    'SECTION2_Z_INDEX': 12
+    'SECTION2_Z_INDEX': 12,
+    'SECTION2_FERBS': [1, 2, 3, 4]
   }
 
   # create mergeconf object for configuration
