@@ -4,17 +4,23 @@
 Exceptions raised by MergeConf package.
 """
 
+import inspect
+
 class MissingConfiguration(Exception):
   """
   Raised if mandatory configuration items are missing.
 
   Attributes:
-    missing: list of missing variables' keys
+    missing: list of tuples of missing variables' sections and keys
   """
 
   def __init__(self, missingvars):
     self._missing = missingvars
-    description = 'Undefined mandatory variables: {}'.format(', '.join(missingvars))
+
+    # flatten list of tuples into list of section.key
+    l = [f"{section}.{key}" for (section, key) in missingvars]
+
+    description = f"Undefined mandatory variables: {', '.join(l)}"
     super().__init__(description)
 
   @property
@@ -55,3 +61,66 @@ class UnsupportedType(Exception):
   @property
   def type(self):
     return self._type
+
+class UndefinedSection(Exception):
+  """
+  Raised if a section is found that was not defined for the parser.
+
+  Attributes:
+    section: the section name
+  """
+  def __init__(self, section):
+    self._section = section
+    description = f"Unexpected section found: '{section}'"
+    super().__init__(description)
+
+  @property
+  def section(self):
+    return self._section
+
+class UndefinedConfiguration(Exception):
+  """
+  Raised if a configuration item is found that was not defined for the parser.
+
+  Attributes:
+    section: the section name
+    item: the item name
+  """
+  def __init__(self, section, item):
+    self._section = section
+    self._item = item
+    description = f"Unexpected configuration item found: '{item}' in section '{section}'"
+    super().__init__(description)
+
+  @property
+  def section(self):
+    return self._section
+
+  @property
+  def item(self):
+    return self._item
+
+class Deprecated(Exception):
+  """
+  Raised for hard deprecations where functionality has been removed and the
+  API is not available at all.
+
+  Attributes:
+    version: the last version in which this functionality is available.
+    message: further information to assist the user.
+  """
+  def __init__(self, version, message=None):
+    self._version = version
+    self._message = message
+    self._function = inspect.stack()[1].function
+    etc = f": {message}" if message else '.'
+    description = f"Deprecated API `{self._function}` last available in version {version}{etc}"
+    super().__init__(description)
+
+  @property
+  def function(self):
+    return self._function
+
+  @property
+  def version(self):
+    return self._version
