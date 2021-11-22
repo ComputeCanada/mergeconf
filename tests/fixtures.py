@@ -16,13 +16,16 @@ def config():
   conf = mergeconf.MergeConf('test')
 
   # add configuration items of various types
-  conf.add('SECTION1_NAME')
-  conf.add('SECTION1_COLOUR', value='black')
-  conf.add('SECTION1_SHAPE', mandatory=True)
-  conf.add_boolean('SECTION1_UPSIDEDOWN')
-  conf.add_boolean('SECTION1_RIGHTSIDEUP', value=True)
-  conf.add('SECTION2_COUNT', type=int)
-  conf.add('SECTION2_RATIO', type=float)
+  conf.add('name')
+  conf.add('shape', mandatory=True)
+  conf.add('colour', value='black')
+  #conf.add_boolean('upsidedown')
+  #conf.add_boolean('rightsideup', value=True)
+  conf.add('upsidedown', type=bool)
+  conf.add('rightsideup', type=bool, value=True)
+  section2 = conf.addsection('section2')
+  section2.add('count', type=int)
+  section2.add('ratio', type=float)
 
   return conf
 
@@ -34,22 +37,67 @@ def config_with_defaults():
 
   # set some basic defaults
   defaults = {
-    'SECTION1_COLOUR': 'blue',
-    'SECTION1_SHAPE': 'triangle',
-    'SECTION2_COUNT': 13,
-    'SECTION2_Z_INDEX': 12,
-    'SECTION2_FERBS': [1, 2, 3, 4]
+    None: {
+      'colour': 'blue',
+      'shape': 'triangle'
+    },
+    'section2': {
+      'count': 13,
+      'z_index': 12,
+      'ferbs': [1, 2, 3, 4]
+    }
   }
 
   # create mergeconf object for configuration
   conf = mergeconf.MergeConf('test', map=defaults)
 
   # add configuration items of various types
-  conf.add('SECTION1_NAME')
-  conf.add('SECTION1_SHAPE', mandatory=True)
-  conf.add_boolean('SECTION1_UPSIDEDOWN')
-  conf.add_boolean('SECTION1_RIGHTSIDEUP', value=True)
-  conf.add('SECTION2_COUNT', type=int)
-  conf.add('SECTION2_RATIO', type=float)
+  conf.add('name')
+  conf.add('shape', mandatory=True)
+  conf.add('upsidedown', type=bool)
+  conf.add('rightsideup', type=bool, value=True)
+  section2 = conf.addsection('section2')
+  section2.add('count', type=int)
+  section2.add('ratio', type=float)
+
+  return conf
+
+@pytest.fixture
+def config_not_strict():
+  """
+  Create a full configuration and allow for unconfigured sections.
+  """
+
+  # create mergeconf object for configuration
+  conf = mergeconf.MergeConf('test', strict=False)
+
+  # add configuration items of various types
+  conf.add('name')
+  conf.add('shape', mandatory=True)
+  conf.add('upsidedown', type=bool)
+  conf.add('rightsideup', type=bool, value=True)
+  section2 = conf.addsection('section2')
+  section2.add('count', type=int)
+  section2.add('ratio', type=float)
+
+  return conf
+
+@pytest.fixture
+def config_strict():
+  """
+  Create a full configuration and allow for unconfigured sections.
+  """
+
+  # create mergeconf object for configuration
+  conf = mergeconf.MergeConf('test', strict=True)
+
+  # add configuration items of various types
+  conf.add('name')
+  conf.add('shape', mandatory=True)
+  conf.add('upsidedown', type=bool)
+  conf.add('rightsideup', type=bool, value=True)
+  section2 = conf.addsection('section2')
+  section2.add('count', type=int)
+  section2.add('ratio', type=float)
 
   return conf
