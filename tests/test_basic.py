@@ -31,7 +31,6 @@ def test_no_config(config):
   with pytest.raises(mergeconf.exceptions.MissingConfiguration) as e:
     config.merge()
   print(e.value.missing)
-  #assert e.value.missing == ['SECTION1_SHAPE']
   assert e.value.missing == [(None, 'shape')]
 
 def test_no_config_map(config_with_defaults):
@@ -40,21 +39,11 @@ def test_no_config_map(config_with_defaults):
   """
   config_with_defaults.merge()
   assert config_with_defaults['shape'] == 'triangle'
+  assert config_with_defaults.shape == 'triangle'
 
   d = config_with_defaults.to_dict()
   print("Config as dict:")
   print(d)
-  #assert d == {
-  #  'SECTION1_NAME': None,
-  #  'SECTION1_COLOUR': 'blue',
-  #  'SECTION1_UPSIDEDOWN': None,
-  #  'SECTION1_RIGHTSIDEUP': True,
-  #  'SECTION1_SHAPE': 'triangle',
-  #  'SECTION2_COUNT': 13,
-  #  'SECTION2_Z_INDEX': 12,
-  #  'SECTION2_RATIO': None,
-  #  'SECTION2_FERBS': '[1, 2, 3, 4]'
-  #}
   assert d == {
     None: {
       'name': None,
@@ -86,6 +75,11 @@ def test_config_only_env(config):
   assert config['rightsideup'] == True
   assert config['section2']['count'] == 10
   assert config['section2']['ratio'] == 10.425
+  assert config.shape == 'circle'
+  assert config.upsidedown == False
+  assert config.rightsideup == True
+  assert config.section2.count == 10
+  assert config.section2.ratio == 10.425
 
   # clean up environment
   clean_up_env()
@@ -178,6 +172,7 @@ def test_add_with_defaults(config_with_defaults):
   assert config_with_defaults['section2']['transparent'] == False
   assert config_with_defaults['section2']['ferbity'] == 4.2
   assert config_with_defaults['section2']['ferbs'] == '[1, 2, 3, 4]'
+  assert config_with_defaults.section2.ferbs == '[1, 2, 3, 4]'
 
 def test_iterate_values(config_with_defaults):
   """
@@ -245,4 +240,8 @@ def test_deprecated_functionality(config):
   with pytest.raises(mergeconf.exceptions.Deprecated) as e:
     config.add_boolean('thisshouldfail', True)
   assert e.value.function == 'add_boolean'
+  assert e.value.version == '0.3'
+  with pytest.raises(mergeconf.exceptions.Deprecated) as e:
+    config.parse('fakefilename')
+  assert e.value.function == 'parse'
   assert e.value.version == '0.3'

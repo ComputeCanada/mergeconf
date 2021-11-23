@@ -10,6 +10,15 @@ from mergeconf.mergeconfvalue import MergeConfValue
 # reasonable replacement (like `klass` for `class`)
 builtin_type = type
 
+# deprecation apology message
+deprecation_msg = """
+This method is deprecated immediately.  I apologise for any inconvenience, but
+I estimate uptake of this library to be in the low 1's and probably actually
+just 1.  To continue using the API you're expecting, you can specify version
+0.3 of the library but it was overhauled for better functionality and, I think,
+a nicer API.
+"""
+
 # defined outside MergeConf and MergeConf is its own section (the default one)
 class MergeConfSection():
   def __init__(self, name):
@@ -19,6 +28,9 @@ class MergeConfSection():
 
   def __getitem__(self, key):
     return self._items[key].value
+
+  def __getattr__(self, attr):
+    return self.__getitem__(attr)
 
   def __iter__(self):
     for key, value in self._items.items():
@@ -40,8 +52,6 @@ class MergeConfSection():
 
     Notes: Type detection is attempted if not specified
     """
-    print(f"In MergeConfSection[name={self._name}]::add(key={key}, value={value}, mandatory={mandatory}, type={type}")
-
     if type and type not in [bool, int, float, str]:
       raise exceptions.UnsupportedType(type)
     if not type:
@@ -124,33 +134,11 @@ class MergeConf(MergeConfSection):
           type = builtin_type(value)
           if type not in [bool, int, float, str]:
             type = str
-          print(f"Adding ({type}) {key}={value} to {sectionname}")
           section.add(key, value, type=type)
 
-  #def __iter__(self):
-  #  for sectionname, section in self._sections.items():
-  #    yield sectionname, section
   def sections(self):
     for sectionname, section in self._sections.items():
       yield sectionname, section
-
-##  # TODO: get rid of the "as_strings" bit unless we wind up using it
-##  def to_dict(self, as_strings=False):
-##    if as_strings:
-##      def tostr(val):
-##        if val is None:
-##          return ''
-##        if isinstance(val, bool):
-##          return "yes" if val else "no"
-##        return str(val)
-##
-##      return {
-##        sectionname: {
-##          key: tostr(value.value)
-##          for key, value in section._items.items()
-##        }
-##        for sectionname, section in self._sections.items()
-##      }
 
   def to_dict(self):
     return {
@@ -166,13 +154,8 @@ class MergeConf(MergeConfSection):
       return self._sections[key]
     return super().__getitem__(key)
 
-  # From trying to support `config.section1.item1` sort of syntax
-  #def __getattr__(self, attr):
-  #  return self._map[attr].value
-  #
-  ## only putting this in because somehow implementing __getattr__ means I have to
-  #def keys(self):
-  #  return self._map.keys()
+  def __getattr__(self, attr):
+    return self.__getitem__(attr)
 
   # pylint: disable=no-self-use
   def add_boolean(self, key, value=None, mandatory=False):
@@ -188,12 +171,7 @@ class MergeConf(MergeConfSection):
     Note: This is deprecated; simply use `add` with `type=bool`.  This will be
       removed in a future release.
     """
-    raise exceptions.Deprecated(version='0.3', message="""
-This method is deprecated immediately.  I have no reason to believe this
-package has been adopted by anybody and moreover its version in still well
-below v1.0, and so I am just cutting this right out.  Enough about this
-package has changed at any rate; please revisit the documentation.
-""")
+    raise exceptions.Deprecated(version='0.3', message=deprecation_msg)
 
   def _merge_environment(self):
     """
@@ -220,7 +198,6 @@ package has changed at any rate; please revisit the documentation.
       x[0].split(prefix, 1)[1]: x[1]
       for x in os.environ.items() if x[0].startswith(prefix)
     }
-    print(envvars)
 
     # now map to sections and variables
     for sectionname, section in self._sections.items():
@@ -231,7 +208,6 @@ package has changed at any rate; please revisit the documentation.
       for var in section._items:
         envvarname = f"{prefix}{var.upper()}"
         if envvarname in envvars:
-          print(f"Found one: {envvarname}={envvars[envvarname]}")
           # overwrite existing value
           section._items[var].value = envvars[envvarname]
 
@@ -249,10 +225,12 @@ package has changed at any rate; please revisit the documentation.
   def addfile(self, configfile):
     self._files.append(configfile)
 
-  # TODO: default_config_file should be in __init__() but that might muck up
-  #   use of the fixture.  But it's still better style: making it a parameter to
-  #   parse() is confusing because it sounds like an imperative
-  #   (`parse(thisfile)`).
+  def parse(self, *args, **kwargs):
+    """
+    Deprecated.  See merge()
+    """
+    raise exceptions.Deprecated(version='0.3', message=deprecation_msg)
+
   def merge(self):
     """
     Takes configuration definition and any configuration files specified and
@@ -264,15 +242,13 @@ package has changed at any rate; please revisit the documentation.
       A dict of key-value configuration items.
     """
 
-    print(f"Before adding other stuff: {self.to_dict()}")
-
     # get configuration file from environment, fall back to given
     config_files = os.environ.get(
       f"{self._codename.upper()}_CONFIG",
       self._files
     )
 
-    # if we have a config file
+    # if we have config files
     if config_files:
       # get parser.  Turn interpolation off so '%' doesn't have to be escaped.
       config_from_file = ConfigParser(delimiters='=', interpolation=None)
@@ -288,7 +264,6 @@ package has changed at any rate; please revisit the documentation.
           ref = self
         elif section not in self._sections:
           # unrecognized configuration section
-          # pylint: disable=using-constant-test
           if self._strict:
             raise exceptions.UndefinedSection(section)
           logging.warning("Unexpected section in configuration: %s", section)
@@ -312,7 +287,6 @@ package has changed at any rate; please revisit the documentation.
     unfulfilled = []
     for sectionname, section in self._sections.items():
       for key in section._mandatory:
-        print(f"Checking section {sectionname} for {key}")
         if section._items[key].value is None:
           unfulfilled.append((sectionname,key))
     if unfulfilled:
