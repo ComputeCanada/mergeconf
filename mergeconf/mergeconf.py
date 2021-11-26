@@ -136,9 +136,9 @@ class MergeConf(MergeConfSection):
             type = str
           section.add(key, value, type=type)
 
+  @property
   def sections(self):
-    for sectionname, section in self._sections.items():
-      yield sectionname, section
+    return self._sections
 
   def to_dict(self):
     return {
@@ -148,6 +148,10 @@ class MergeConf(MergeConfSection):
       }
       for sectionname, section in self._sections.items()
     }
+
+  def __iter__(self):
+    for sectionname, section in self._sections.items():
+      yield sectionname, section
 
   def __getitem__(self, key):
     if key in self._sections:
