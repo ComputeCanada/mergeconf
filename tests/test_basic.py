@@ -31,7 +31,7 @@ def test_no_config(config):
   with pytest.raises(mergeconf.exceptions.MissingConfiguration) as e:
     config.merge()
   print(e.value.missing)
-  assert e.value.missing == [(None, 'shape')]
+  assert e.value.missing == "shape"
 
 def test_no_config_map(config_with_defaults):
   """
@@ -45,13 +45,11 @@ def test_no_config_map(config_with_defaults):
   print("Config as dict:")
   print(d)
   assert d == {
-    None: {
-      'name': None,
-      'colour': 'blue',
-      'upsidedown': None,
-      'rightsideup': True,
-      'shape': 'triangle',
-    },
+    'name': None,
+    'colour': 'blue',
+    'upsidedown': None,
+    'rightsideup': True,
+    'shape': 'triangle',
     'section2': {
       'count': 13,
       'z_index': 12,
@@ -157,7 +155,7 @@ def test_add_with_defaults(config_with_defaults):
   """
   Tests a configuration initialized with defaults via a map.
   """
-  section2 = config_with_defaults.addsection('section2')
+  section2 = config_with_defaults.add_section('section2')
   section2.add('feels', value='heavy')
   section2.add('width', value=10)
   section2.add('transparent', value=False)
@@ -182,18 +180,16 @@ def test_iterate_values(config_with_defaults):
   config_with_defaults.merge()
   print(config_with_defaults.to_dict())
 
-  # iterate through sections
-  sections = config_with_defaults.sections()
-  section = next(sections)
-  assert section[0] == None
-  section = section[1]
-  it = iter(section)
+  # iterate through main items
+  it = iter(config_with_defaults)
   assert next(it)[0] == 'colour'
   assert next(it)[0] == 'shape'
   assert next(it)[0] == 'name'
   assert next(it)[0] == 'upsidedown'
   assert next(it)[0] == 'rightsideup'
 
+  # iterate through sections
+  sections = iter(config_with_defaults.sections)
   section = next(sections)
   assert section[0] == 'section2'
   section = section[1]

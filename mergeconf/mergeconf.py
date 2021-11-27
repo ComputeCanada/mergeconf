@@ -21,23 +21,59 @@ a nicer API.
 
 # defined outside MergeConf and MergeConf is its own section (the default one)
 class MergeConfSection():
-  def __init__(self, name):
+  def __init__(self, name, map=None):
     self._name = name
     self._items = {}
     self._mandatory = []
+    self._sections = {}
+
+    if map:
+      for key, value in map.items():
+        if isinstance(value, dict):
+          self._sections[key] = MergeConfSection(key, map=value)
+        else:
+          type = builtin_type(value)
+          if type not in [bool, int, float, str]:
+            type = str
+          print(f"Adding to section {name}: {key} = {value} with type {type}")
+          self._items[key] = MergeConfValue(key, value, type=type)
 
   def __getitem__(self, key):
-    return self._items[key].value
+    # TODO: should section override item, or the other way around?
+    # TODO: should add_section() or additem() first check if an item or section with the same name exist?
+    if key in self._items:
+      return self._items[key].value
+    if key in self._sections:
+      return self._sections[key]
+    raise KeyError
 
   def __getattr__(self, attr):
     return self.__getitem__(attr)
 
   def __iter__(self):
-    for key, value in self._items.items():
-      #if isinstance(value, dict):
-      #  yield (key, dict)
-      #else:
-      yield (key, value.value)
+    for key, item in self._items.items():
+      yield (key, item.value)
+    # TODO: should it even do this:
+    for name, section in self._sections.items():
+      yield (name, section)
+
+  def to_dict(self):
+    # TODO(3.9): use union
+    # return {
+    #   key: item.value for key, item in self._items.items() 
+    # } | { 
+    #   name: section.to_dict() for name, section in self._sections.items()
+    # }
+    d = { key: item.value for key, item in self._items.items() }
+    d.update(
+      { name: section.to_dict() for name, section in self._sections.items() }
+    )
+    return d
+
+  @property
+  def sections(self):
+    for name, section in self._sections.items():
+      yield (name, section)
 
   def add(self, key, value=None, mandatory=False, type=None):
     """
@@ -52,6 +88,7 @@ class MergeConfSection():
 
     Notes: Type detection is attempted if not specified
     """
+    # TODO: move this logic to MergeConfValue
     if type and type not in [bool, int, float, str]:
       raise exceptions.UnsupportedType(type)
     if not type:
@@ -71,8 +108,45 @@ class MergeConfSection():
 
     # remember it's mandatory
     if mandatory:
+      print(f"Adding  mandatory variable {item.key}")
       self._mandatory.append(item.key)
 
+  # TODO: this can be simplified to remove the if clause if/when `map` is no
+  # longer permitted as a parameter to init()
+  def add_section(self, name):
+    if name in self._sections:
+      return self._sections[name]
+    section = MergeConfSection(name)
+    self._sections[name] = section
+    return section
+
+  #@property
+  #def sections(self):
+  #  return self._sections
+
+  def missing_mandatory(self):
+    """
+    Check that each mandatory item in this section has a defined value, and
+    each subsection as well.
+
+    Returns:
+      List of fully qualified mandatory items without a defined value, in
+      section-dot-item syntax.
+    """
+    missing = []
+
+    # check items
+    for key in self._mandatory:
+      if self._items[key].value is None:
+        missing.append(key)
+
+    # check subsections
+    for sectionname, section in self._sections.items():
+      ss_missing = section.missing_mandatory()
+      if ss_missing:
+        missing.extend(map(lambda i: f"{sectionnname}.{i}", ss_missing))
+
+    return missing or None
 
 class MergeConf(MergeConfSection):
   """
@@ -104,7 +178,7 @@ class MergeConf(MergeConfSection):
     Note: The `map` argument is probably to be deprecated and removed at a
       later date.  Its utility is limited and should be avoided.
     """
-    super().__init__(None)
+    super().__init__(None, map=map)
 
     self._codename = codename
     self._strict = strict
@@ -115,51 +189,45 @@ class MergeConf(MergeConfSection):
     # config files to read
     self._files = []
 
-    # sections map includes self
-    self._sections = {
-      None: self
-    }
+    # initialize sections map with main section
+    #self._sections = {
+    #  self._main: MergeConfSection(self._main)
+    #}
 
     if map:
       logging.warning("Support for `map` argument is deprecated and will " \
         "be removed.  Please use `add()` to add configuration options and " \
         "their specifications, including default values.")
 
-      for sectionname, sectiondict in map.items():
-        if sectionname not in self._sections:
-          section = self.addsection(sectionname)
-        else:
-          section = self._sections[sectionname]
-        for key, value in sectiondict.items():
-          type = builtin_type(value)
-          if type not in [bool, int, float, str]:
-            type = str
-          section.add(key, value, type=type)
+    #  for sectionname, sectiondict in map.items():
+    #    if sectionname not in self._sections:
+    #      section = self.add_section(sectionname)
+    #    else:
+    #      section = self._sections[sectionname]
+    #    for key, value in sectiondict.items():
+    #      type = builtin_type(value)
+    #      if type not in [bool, int, float, str]:
+    #        type = str
+    #      section.add(key, value, type=type)
 
-  @property
-  def sections(self):
-    return self._sections
+  #def to_dict(self):
+  #  return {
+  #    sectionname: {
+  #      key: value.value
+  #      for key, value in section._items.items()
+  #    }
+  #    for sectionname, section in self._sections.items()
+  #  }
 
-  def to_dict(self):
-    return {
-      sectionname: {
-        key: value.value
-        for key, value in section._items.items()
-      }
-      for sectionname, section in self._sections.items()
-    }
-
-  def __iter__(self):
-    for sectionname, section in self._sections.items():
-      yield sectionname, section
-
-  def __getitem__(self, key):
-    if key in self._sections:
-      return self._sections[key]
-    return super().__getitem__(key)
-
-  def __getattr__(self, attr):
-    return self.__getitem__(attr)
+  #def __iter__(self):
+  #  for sectionname, section in self._sections.items():
+  #    yield sectionname, section
+#
+#  def __getitem__(self, key):
+#    return self._sections[key]
+#
+#  def __getattr__(self, attr):
+#    return self.__getitem__(attr)
 
   # pylint: disable=no-self-use
   def add_boolean(self, key, value=None, mandatory=False):
@@ -204,27 +272,20 @@ class MergeConf(MergeConfSection):
     }
 
     # now map to sections and variables
+    # TODO: not recursive!
     for sectionname, section in self._sections.items():
-      if sectionname:
-        prefix = sectionname.upper() + '_'
-      else:
-        prefix = ''
+      prefix = sectionname.upper() + '_'
       for var in section._items:
         envvarname = f"{prefix}{var.upper()}"
         if envvarname in envvars:
           # overwrite existing value
           section._items[var].value = envvars[envvarname]
+    for name, item in self._items.items():
+      envvarname = name.upper()
+      if envvarname in envvars:
+        self._items[name].value = envvars[envvarname]
 
     return envvars
-
-  # TODO: this can be simplified to remove the if clause if/when `map` is no
-  # longer permitted as a parameter to init()
-  def addsection(self, name):
-    if name in self._sections:
-      return self._sections[name]
-    section = MergeConfSection(name)
-    self._sections[name] = section
-    return section
 
   def addfile(self, configfile):
     self._files.append(configfile)
@@ -271,7 +332,7 @@ class MergeConf(MergeConfSection):
           if self._strict:
             raise exceptions.UndefinedSection(section)
           logging.warning("Unexpected section in configuration: %s", section)
-          ref = self.addsection(section)
+          ref = self.add_section(section)
         else:
           ref = self._sections[section]
         for option in config_from_file.options(section):
@@ -288,10 +349,16 @@ class MergeConf(MergeConfSection):
     self._merge_environment()
 
     # test that mandatory value have been set
-    unfulfilled = []
-    for sectionname, section in self._sections.items():
-      for key in section._mandatory:
-        if section._items[key].value is None:
-          unfulfilled.append((sectionname,key))
+    # TODO(3.8): use walrus operator
+    # if unfulfilled := self.missing_mandatory():
+    unfulfilled = self.missing_mandatory()
     if unfulfilled:
-      raise exceptions.MissingConfiguration(unfulfilled)
+      raise exceptions.MissingConfiguration(', '.join(unfulfilled))
+
+    #unfulfilled = []
+    #for sectionname, section in self._sections.items():
+    #  for key in section._mandatory:
+    #    if section._items[key].value is None:
+    #      unfulfilled.append((sectionname,key))
+    #if unfulfilled:
+    #  raise exceptions.MissingConfiguration(unfulfilled)

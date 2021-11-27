@@ -23,7 +23,7 @@ def config():
   #conf.add_boolean('rightsideup', value=True)
   conf.add('upsidedown', type=bool)
   conf.add('rightsideup', type=bool, value=True)
-  section2 = conf.addsection('section2')
+  section2 = conf.add_section('section2')
   section2.add('count', type=int)
   section2.add('ratio', type=float)
 
@@ -37,10 +37,8 @@ def config_with_defaults():
 
   # set some basic defaults
   defaults = {
-    None: {
-      'colour': 'blue',
-      'shape': 'triangle'
-    },
+    'colour': 'blue',
+    'shape': 'triangle',
     'section2': {
       'count': 13,
       'z_index': 12,
@@ -56,7 +54,7 @@ def config_with_defaults():
   conf.add('shape', mandatory=True)
   conf.add('upsidedown', type=bool)
   conf.add('rightsideup', type=bool, value=True)
-  section2 = conf.addsection('section2')
+  section2 = conf.add_section('section2')
   section2.add('count', type=int)
   section2.add('ratio', type=float)
 
@@ -76,7 +74,7 @@ def config_not_strict():
   conf.add('shape', mandatory=True)
   conf.add('upsidedown', type=bool)
   conf.add('rightsideup', type=bool, value=True)
-  section2 = conf.addsection('section2')
+  section2 = conf.add_section('section2')
   section2.add('count', type=int)
   section2.add('ratio', type=float)
 
@@ -96,7 +94,7 @@ def config_strict():
   conf.add('shape', mandatory=True)
   conf.add('upsidedown', type=bool)
   conf.add('rightsideup', type=bool, value=True)
-  section2 = conf.addsection('section2')
+  section2 = conf.add_section('section2')
   section2.add('count', type=int)
   section2.add('ratio', type=float)
 
