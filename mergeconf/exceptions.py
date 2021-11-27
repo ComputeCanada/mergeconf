@@ -17,10 +17,11 @@ class MissingConfiguration(Exception):
   def __init__(self, missingvars):
     self._missing = missingvars
 
-    # flatten list of tuples into list of section.key
-    l = [f"{section}.{key}" for (section, key) in missingvars]
+    ## flatten list of tuples into list of section.key
+    #l = [f"{section}.{key}" for (section, key) in missingvars]
+    #description = f"Undefined mandatory variables: {', '.join(l)}"
 
-    description = f"Undefined mandatory variables: {', '.join(l)}"
+    description = f"Undefined mandatory variables: {missingvars}"
     super().__init__(description)
 
   @property
