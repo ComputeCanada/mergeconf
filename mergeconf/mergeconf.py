@@ -309,13 +309,6 @@ class MergeConf(MergeConfSection):
     if unfulfilled:
       raise exceptions.MissingConfiguration(', '.join(unfulfilled))
 
-  # pylint: disable=no-self-use
-  def parse(self, *args, **kwargs):
-    """
-    Deprecated.  See merge()
-    """
-    raise exceptions.Deprecated(version='0.3', message=deprecation_msg)
-
   def merge(self):
     """
     Takes configuration definition and any configuration files specified and
@@ -342,3 +335,29 @@ class MergeConf(MergeConfSection):
 
     # test that mandatory values have been set
     self.validate()
+
+  # -------------------------------------------------------------------------
+  #                                                       deprecated methods
+  # -------------------------------------------------------------------------
+
+  # pylint: disable=no-self-use
+  def add_boolean(self, key, value=None, mandatory=False):
+    """
+    _Deprecated._  Add a configuration item of type Boolean.
+
+    Args:
+      key (str): Name of configuration item
+      value (boolean): Default value, None by default
+      mandatory (boolean): Whether item is mandatory or not, defaults to
+        False.
+
+    Note: This is deprecated; simply use `add` with `type=bool`.
+    """
+    raise exceptions.Deprecated(version='0.3', message=deprecation_msg)
+
+  # pylint: disable=no-self-use
+  def parse(self, *args, **kwargs):
+    """
+    Deprecated.  See merge()
+    """
+    raise exceptions.Deprecated(version='0.3', message=deprecation_msg)
