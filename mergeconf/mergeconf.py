@@ -39,8 +39,6 @@ class MergeConfSection():
           self._items[key] = MergeConfValue(key, value, type=type)
 
   def __getitem__(self, key):
-    # TODO: should section override item, or the other way around?
-    # TODO: should add_section() or additem() first check if an item or section with the same name exist?
     if key in self._items:
       return self._items[key].value
     if key in self._sections:
@@ -48,14 +46,15 @@ class MergeConfSection():
     raise KeyError
 
   def __getattr__(self, attr):
-    return self.__getitem__(attr)
+    if attr in self._items:
+      return self._items[attr].value
+    if attr in self._sections:
+      return self._sections[attr]
+    raise AttributeError
 
   def __iter__(self):
     for key, item in self._items.items():
       yield (key, item.value)
-    # TODO: should it even do this:
-    for name, section in self._sections.items():
-      yield (name, section)
 
   # get items for this section
   # then for each subsection, check if any variables start with the section
@@ -185,7 +184,7 @@ class MergeConf(MergeConfSection):
   values can be extracted.
   """
 
-  def __init__(self, codename, map=None, strict=True):
+  def __init__(self, codename, files=None, map=None, strict=True):
     """
     Initializes MergeConf class.
 
@@ -209,71 +208,24 @@ class MergeConf(MergeConfSection):
     super().__init__(None, map=map)
 
     self._codename = codename
+    self._files = files
     self._strict = strict
 
-    # by default, for now, main section name is codename
-    self._main = codename
+    # main section name transparently added.  ConfigParser requires all items
+    # to be contained in a section; this supports simpler configurations and
+    # avoids having to create a "main" or "app" section explicitly if not
+    # desired.
+    self._main = '__app__'
 
     # config files to read
     self._files = []
-
-    # initialize sections map with main section
-    #self._sections = {
-    #  self._main: MergeConfSection(self._main)
-    #}
 
     if map:
       logging.warning("Support for `map` argument is deprecated and will " \
         "be removed.  Please use `add()` to add configuration options and " \
         "their specifications, including default values.")
 
-    #  for sectionname, sectiondict in map.items():
-    #    if sectionname not in self._sections:
-    #      section = self.add_section(sectionname)
-    #    else:
-    #      section = self._sections[sectionname]
-    #    for key, value in sectiondict.items():
-    #      type = builtin_type(value)
-    #      if type not in [bool, int, float, str]:
-    #        type = str
-    #      section.add(key, value, type=type)
-
-  #def to_dict(self):
-  #  return {
-  #    sectionname: {
-  #      key: value.value
-  #      for key, value in section._items.items()
-  #    }
-  #    for sectionname, section in self._sections.items()
-  #  }
-
-  #def __iter__(self):
-  #  for sectionname, section in self._sections.items():
-  #    yield sectionname, section
-#
-#  def __getitem__(self, key):
-#    return self._sections[key]
-#
-#  def __getattr__(self, attr):
-#    return self.__getitem__(attr)
-
-  # pylint: disable=no-self-use
-  def add_boolean(self, key, value=None, mandatory=False):
-    """
-    _Deprecated._  Add a configuration item of type Boolean.
-
-    Args:
-      key (str): Name of configuration item
-      value (boolean): Default value, None by default
-      mandatory (boolean): Whether item is mandatory or not, defaults to
-        False.
-
-    Note: This is deprecated; simply use `add` with `type=bool`.  This will be
-      removed in a future release.
-    """
-    raise exceptions.Deprecated(version='0.3', message=deprecation_msg)
-
-  def _merge_environment(self):
+  def merge_environment(self):
     """
     Using configuration definition, reads in variables from the environment
     matching the pattern `<codename>[_<section_name>]_<variable_name>`.  Any
@@ -302,9 +254,62 @@ class MergeConf(MergeConfSection):
 
     return envvars
 
-  def addfile(self, configfile):
-    self._files.append(configfile)
+  def merge_file(self, config_file):
+    """
+    Merge configuration defined in ConfigParser-format file.
+    """
+    config = ConfigParser(delimiters='=', interpolation=None)
 
+    # read configuration into string so we can prepend a pretend main section.
+    # See definition of self._main for explanation.
+    try:
+      with open(config_file) as f:
+        config_content = f"[{self._main}]\n{f.read()}"
+    except FileNotFoundError:
+      # TODO: disable this globally?
+      # pylint: disable=raise-missing-from
+      raise exceptions.MissingConfigurationFile(config_file)
+
+    # read configuration
+    config.read_string(config_content, source=config_file)
+
+    # read into stuffs
+    for section in config.sections():
+      if section == self._main:
+        ref = self
+      elif section not in self._sections:
+        # unrecognized configuration section
+        if self._strict:
+          raise exceptions.UndefinedSection(section)
+        logging.warning("Unexpected section in configuration: %s", section)
+        ref = self.add_section(section)
+      else:
+        ref = self._sections[section]
+      for option in config.options(section):
+        if option not in ref._items:
+          if self._strict:
+            raise exceptions.UndefinedConfiguration(section, option)
+          logging.warning("Unexpected configuration item in section %s: %s",
+            section, option)
+          ref.add(option, config[section][option])
+        else:
+          ref._items[option].value = config[section][option]
+
+  def validate(self):
+    """
+    Checks that mandatory items have been defined in configuration.  If not,
+    throws exception.  Client may also use `missing_mandatory()`.
+
+    Subclasses may add additional validation but should first call the parent
+    implementation as the test for mandatory items is primary.
+    """
+    # TODO(3.8): use walrus operator
+    # if unfulfilled := self.missing_mandatory():
+    unfulfilled = self.missing_mandatory()
+    if unfulfilled:
+      raise exceptions.MissingConfiguration(', '.join(unfulfilled))
+
+  # pylint: disable=no-self-use
   def parse(self, *args, **kwargs):
     """
     Deprecated.  See merge()
@@ -328,52 +333,12 @@ class MergeConf(MergeConfSection):
       self._files
     )
 
-    # if we have config files
-    if config_files:
-      # get parser.  Turn interpolation off so '%' doesn't have to be escaped.
-      config_from_file = ConfigParser(delimiters='=', interpolation=None)
-
-      # read configuration
-      parsed_files = config_from_file.read(config_files)
-      if not parsed_files:
-        raise exceptions.MissingConfigurationFile(config_files)
-
-      # read into stuffs
-      for section in config_from_file.sections():
-        if section == self._main:
-          ref = self
-        elif section not in self._sections:
-          # unrecognized configuration section
-          if self._strict:
-            raise exceptions.UndefinedSection(section)
-          logging.warning("Unexpected section in configuration: %s", section)
-          ref = self.add_section(section)
-        else:
-          ref = self._sections[section]
-        for option in config_from_file.options(section):
-          if option not in ref._items:
-            if self._strict:
-              raise exceptions.UndefinedConfiguration(section, option)
-            logging.warning("Unexpected configuration item in section %s: %s",
-              section, option)
-            ref.add(option, config_from_file[section][option])
-          else:
-            ref._items[option].value = config_from_file[section][option]
+    # if we have config files, merge into config
+    for config_file in config_files:
+      self.merge_file(config_file)
 
     # override with variables set in environment
-    self._merge_environment()
+    self.merge_environment()
 
-    # test that mandatory value have been set
-    # TODO(3.8): use walrus operator
-    # if unfulfilled := self.missing_mandatory():
-    unfulfilled = self.missing_mandatory()
-    if unfulfilled:
-      raise exceptions.MissingConfiguration(', '.join(unfulfilled))
-
-    #unfulfilled = []
-    #for sectionname, section in self._sections.items():
-    #  for key in section._mandatory:
-    #    if section._items[key].value is None:
-    #      unfulfilled.append((sectionname,key))
-    #if unfulfilled:
-    #  raise exceptions.MissingConfiguration(unfulfilled)
+    # test that mandatory values have been set
+    self.validate()
