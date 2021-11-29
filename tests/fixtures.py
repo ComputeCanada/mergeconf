@@ -24,7 +24,7 @@ def config():
   conf.add('upsidedown', type=bool)
   conf.add('rightsideup', type=bool, value=True)
   section2 = conf.add_section('section2')
-  section2.add('count', type=int)
+  section2.add('count', type=int, mandatory=True)
   section2.add('ratio', type=float)
 
   return conf
