@@ -19,7 +19,6 @@ just 1.  To continue using the API you're expecting, you can specify version
 a nicer API.
 """
 
-# defined outside MergeConf and MergeConf is its own section (the default one)
 class MergeConfSection():
   def __init__(self, name, map=None):
     self._name = name
@@ -35,7 +34,6 @@ class MergeConfSection():
           type = builtin_type(value)
           if type not in [bool, int, float, str]:
             type = str
-          print(f"Adding to section {name}: {key} = {value} with type {type}")
           self._items[key] = MergeConfValue(key, value, type=type)
 
   def __getitem__(self, key):
@@ -95,8 +93,7 @@ class MergeConfSection():
 
   @property
   def sections(self):
-    for name, section in self._sections.items():
-      yield (name, section)
+    return self._sections.keys()
 
   def add(self, key, value=None, mandatory=False, type=None):
     """
@@ -131,7 +128,6 @@ class MergeConfSection():
 
     # remember it's mandatory
     if mandatory:
-      print(f"Adding  mandatory variable {item.key}")
       self._mandatory.append(item.key)
 
   # TODO: this can be simplified to remove the if clause if/when `map` is no
@@ -195,6 +191,9 @@ class MergeConf(MergeConfSection):
         environment's namespace.  For example, for an `app_name` configuration
         key, with a codename `MYAPP`, the corresponding environment variable
         would be `MYAPP_APP_NAME`.
+      files: filename or list of filenames for configuration files.  Files are
+        applied in order listed, and so should be listed from least to most
+        important.
       map (dict): Configuration options which are neither mandatory nor of a
         specified type, specified as key, value pairs.
       strict: If true, unexpected configuration sections or items will cause
@@ -208,17 +207,17 @@ class MergeConf(MergeConfSection):
     super().__init__(None, map=map)
 
     self._codename = codename
-    self._files = files
     self._strict = strict
+
+    self._files = files
+    if files and not isinstance(files, (list, tuple)):
+      self._files = (files,)
 
     # main section name transparently added.  ConfigParser requires all items
     # to be contained in a section; this supports simpler configurations and
     # avoids having to create a "main" or "app" section explicitly if not
     # desired.
     self._main = '__app__'
-
-    # config files to read
-    self._files = []
 
     if map:
       logging.warning("Support for `map` argument is deprecated and will " \
@@ -320,15 +319,15 @@ class MergeConf(MergeConfSection):
       A dict of key-value configuration items.
     """
 
-    # get configuration file from environment, fall back to given
-    config_files = os.environ.get(
-      f"{self._codename.upper()}_CONFIG",
-      self._files
-    )
+    # get configuration file(s) from environment, fall back to default
+    from_env = os.environ.get(f"{self._codename.upper()}_CONFIG")
+    config_files = from_env.split(',') if from_env else self._files
 
     # if we have config files, merge into config
-    for config_file in config_files:
-      self.merge_file(config_file)
+    if config_files:
+      for config_file in config_files:
+        logging.debug("Merging in config file %s", config_file)
+        self.merge_file(config_file)
 
     # override with variables set in environment
     self.merge_environment()
