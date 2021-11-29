@@ -2,7 +2,7 @@
 # pylint: disable=unused-import,singleton-comparison
 import os
 import pytest
-from tests.fixtures import config, config_with_defaults, config_not_strict, config_strict, codename
+from tests.fixtures import config, config_no_file, config_with_defaults, config_not_strict, config_strict, codename
 import mergeconf
 
 # ---------------------------------------------------------------------------
@@ -23,13 +23,13 @@ def clean_up_env():
 #                                                             tests
 # ---------------------------------------------------------------------------
 
-def test_no_config(config):
+def test_no_config(config_no_file):
   """
   Tests we are able to parse an empty configuration, except it will fail on
   missing mandatory field ("shape").
   """
   with pytest.raises(mergeconf.exceptions.MissingConfiguration) as e:
-    config.merge()
+    config_no_file.merge()
   print(e.value.missing)
   assert e.value.missing == "shape, section2.count"
 
@@ -86,7 +86,6 @@ def test_config_only_file(config):
   """
   Tests we are able to correctly parse a config defined only in a file.
   """
-  config.merge_file('tests/test1.conf')
   config.merge()
   assert config['shape'] == 'circle'
   assert config['upsidedown'] == False
@@ -102,8 +101,7 @@ def test_config_file_and_env(config):
   os.environ[envvarname("SHAPE")] = 'triangle'
   os.environ[envvarname("UPSIDEDOWN")] = 'true'
   os.environ[envvarname("SECTION2_COUNT")] = '15'
-  config.merge_file('tests/test1.conf')
-  config.merge_environment()
+  config.merge()
   assert config['shape'] == 'triangle'
   assert config['upsidedown'] == True
   assert config['rightsideup'] == True
@@ -140,7 +138,6 @@ def test_default_values(config_with_defaults):
   a file.
   """
   config_with_defaults.merge_file('tests/test2.conf')
-  config_with_defaults.merge()
   assert config_with_defaults['shape'] == 'rectangle'
   assert config_with_defaults['colour'] == 'blue'
   assert config_with_defaults['upsidedown'] == False
@@ -175,7 +172,6 @@ def test_iterate_values(config_with_defaults):
   Tests iteration through a configuration.
   """
   config_with_defaults.merge_file('tests/test2.conf')
-  config_with_defaults.merge()
   print(config_with_defaults.to_dict())
 
   # iterate through main items
@@ -187,21 +183,21 @@ def test_iterate_values(config_with_defaults):
   assert next(it)[0] == 'rightsideup'
 
   # iterate through sections
-  sections = iter(config_with_defaults.sections)
-  section = next(sections)
-  assert section[0] == 'section2'
-  section = section[1]
-  it = iter(section)
-  assert next(it)[0] == 'count'
-  assert next(it)[0] == 'z_index'
-  assert next(it)[0] == 'ferbs'
-  assert next(it)[0] == 'ratio'
+  for name in config_with_defaults.sections:
+    assert name == 'section2'
+    section = config_with_defaults[name]
+    it = iter(section)
+    assert next(it)[0] == 'count'
+    assert next(it)[0] == 'z_index'
+    assert next(it)[0] == 'ferbs'
+    assert next(it)[0] == 'ratio'
 
 def test_unconfigured_section_allowed(config_not_strict):
   """
   Tests that an unconfigured section is caught and an exception thrown.
   """
   config_not_strict.merge_file('tests/test3.conf')
+  config_not_strict.validate()
   assert config_not_strict['section2']['snurf'] == 'garbage'
   assert config_not_strict['section3']['blarb'] == '32'
   assert config_not_strict['section3']['snarf'] == 'this is the way the world ends'
@@ -212,6 +208,7 @@ def test_unconfigured_item_not_allowed(config_strict):
   """
   with pytest.raises(mergeconf.exceptions.UndefinedConfiguration) as e:
     config_strict.merge_file('tests/test3.conf')
+    config_strict.validate()
   assert e.value.section == 'section2'
   assert e.value.item == 'snurf'
 
@@ -221,6 +218,7 @@ def test_unconfigured_section_not_allowed(config_strict):
   """
   with pytest.raises(mergeconf.exceptions.UndefinedSection) as e:
     config_strict.merge_file('tests/test4.conf')
+    config_strict.validate()
   assert e.value.section == 'section3'
 
 def test_deprecated_functionality(config):
@@ -240,7 +238,7 @@ def test_garbage_item_by_index(config):
   """
   Tests that attempted access of undefined variable results in an exception.
   """
-  config.merge_file('tests/test1.conf')
+  config.merge()
   with pytest.raises(KeyError):
     print(config['whut'])
 
@@ -248,6 +246,6 @@ def test_garbage_item_by_attribute(config):
   """
   Tests that attempted access of undefined variable results in an exception.
   """
-  config.merge_file('tests/test1.conf')
+  config.merge()
   with pytest.raises(AttributeError):
     print(config.whut)

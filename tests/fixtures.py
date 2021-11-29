@@ -7,13 +7,36 @@ from mergeconf import mergeconf
 codename = 'test'
 
 @pytest.fixture
+def config_no_file():
+  """
+  Create a full configuration without specifying a configuration file.
+  """
+
+  # create mergeconf object for configuration
+  conf = mergeconf.MergeConf('test')
+
+  # add configuration items of various types
+  conf.add('name')
+  conf.add('shape', mandatory=True)
+  conf.add('colour', value='black')
+  #conf.add_boolean('upsidedown')
+  #conf.add_boolean('rightsideup', value=True)
+  conf.add('upsidedown', type=bool)
+  conf.add('rightsideup', type=bool, value=True)
+  section2 = conf.add_section('section2')
+  section2.add('count', type=int, mandatory=True)
+  section2.add('ratio', type=float)
+
+  return conf
+
+@pytest.fixture
 def config():
   """
   Create a full configuration using all of the features.
   """
 
   # create mergeconf object for configuration
-  conf = mergeconf.MergeConf('test')
+  conf = mergeconf.MergeConf('test', files='tests/test1.conf')
 
   # add configuration items of various types
   conf.add('name')
@@ -83,7 +106,7 @@ def config_not_strict():
 @pytest.fixture
 def config_strict():
   """
-  Create a full configuration and allow for unconfigured sections.
+  Create a full configuration and don't permit unconfigured sections.
   """
 
   # create mergeconf object for configuration
