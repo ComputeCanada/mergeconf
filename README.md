@@ -203,8 +203,8 @@ format defined by ConfigParser, with `=` used as the delimiter and
 interpolation turned off.  In addition, unlike ConfigParser, config files
 may include variables defined prior to any section header.
 
-Arguments:
-  config_file (str): Path to config file.
+Args:
+  * `config_file` (**str**): Path to config file.
 
 ### function `missing_mandatory`
 
@@ -235,20 +235,6 @@ throws exception.  Client may also use `missing_mandatory()`.
 Subclasses may add additional validation but should first call the parent
 implementation as the test for mandatory items is primary.
 
-## class `MergeConfValue`
-
-Basic configuration item and base class for more complex types.
-
-### function `__init__`
-
-Create a configuration item.
-
-Arguments:
-  key: Configuration item's key.
-  value: Current value
-  type: Item data type.  Must be one of bool, int, float or str.  If not
-    specified, will be autodetected.
-
 ## module `mergeconf.exceptions`
 
 Exceptions raised by MergeConf package.
@@ -259,15 +245,15 @@ Raised for hard deprecations where functionality has been removed and the
 API is not available at all.
 
 Attributes:
-  version: the last version in which this functionality is available.
-  message: further information to assist the user.
+  * `version`: the last version in which this functionality is available.
+  * `message`: further information to assist the user.
 
 ### class `MissingConfiguration`
 
 Raised if mandatory configuration items are missing.
 
 Attributes:
-  missing: string list of missing items in section-dot-key notation,
+  * `missing`: string list of missing items in section-dot-key notation,
     separated by commas.
 
 ### class `MissingConfigurationFile`
@@ -276,28 +262,26 @@ Raised if the specified configuration file is missing or otherwise
 unreadable.
 
 Attributes:
-  file: the missing file
+  * `file`: the missing file
 
 ### class `UndefinedConfiguration`
 
 Raised if a configuration item is found that was not defined for the parser.
 
 Attributes:
-  section: the section name
-  item: the item name
+  * `section`: the section name
+  * `item`: the item name
 
 ### class `UndefinedSection`
 
 Raised if a section is found that was not defined for the parser.
 
 Attributes:
-  section: the section name
+  * `section`: the section name
 
 ### class `UnsupportedType`
 
 Raised if a configuration item is added with an unsupported type.
 
 Attributes:
-  type: the unsupported type
-
-
+  * `type`: the unsupported type
