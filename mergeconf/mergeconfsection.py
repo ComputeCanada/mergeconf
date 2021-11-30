@@ -1,12 +1,7 @@
 # vi: set softtabstop=2 ts=2 sw=2 expandtab:
 # pylint:
 
-from mergeconf import exceptions
 from mergeconf.mergeconfvalue import MergeConfValue
-
-# aliasing this allows the use of a parameter `type`, for which I can't find a
-# reasonable replacement (like `klass` for `class`)
-builtin_type = type
 
 class MergeConfSection():
   def __init__(self, name, map=None):
@@ -20,10 +15,7 @@ class MergeConfSection():
         if isinstance(value, dict):
           self._sections[key] = MergeConfSection(key, map=value)
         else:
-          type = builtin_type(value)
-          if type not in [bool, int, float, str]:
-            type = str
-          self._items[key] = MergeConfValue(key, value, type=type)
+          self._items[key] = MergeConfValue(key, value)
 
   def __getitem__(self, key):
     if key in self._items:
@@ -97,17 +89,6 @@ class MergeConfSection():
 
     Notes: Type detection is attempted if not specified
     """
-    # TODO: move this logic to MergeConfValue
-    if type and type not in [bool, int, float, str]:
-      raise exceptions.UnsupportedType(type)
-    if not type:
-      if value is None:
-        type = str
-      else:
-        type = builtin_type(value)
-        if type not in [bool, int, float, str]:
-          type = str
-
     item = MergeConfValue(key, value, type=type)
 
     default = self._items.get(item.key, None)

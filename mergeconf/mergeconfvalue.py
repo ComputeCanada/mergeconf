@@ -1,6 +1,11 @@
 # vi: set softtabstop=2 ts=2 sw=2 expandtab:
 # pylint: disable=W0621
 
+from mergeconf import exceptions
+
+# aliasing this allows the use of a parameter `type`, for which I can't find a
+# reasonable replacement (like `klass` for `class`)
+builtin_type = type
 
 class MergeConfValue:
   """
@@ -17,9 +22,27 @@ class MergeConfValue:
     else:
       self._value = self._type(value)
 
-  def __init__(self, key, value=None, mandatory=False, type=str):
+  def __init__(self, key, value=None, type=None):
+    """
+    Create a configuration item.
+
+    Arguments:
+      key: Configuration item's key.
+      value: Current value
+      type: Item data type.  Must be one of bool, int, float or str.  If not
+        specified, will be autodetected.
+    """
+    if type and type not in [bool, int, float, str]:
+      raise exceptions.UnsupportedType(type)
+    if not type:
+      if value is None:
+        type = str
+      else:
+        type = builtin_type(value)
+        if type not in [bool, int, float, str]:
+          type = str
+
     self._key = key
-    self._mandatory = mandatory
     self._type = type
 
     self._set_value_appropriately(value)
