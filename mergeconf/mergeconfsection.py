@@ -32,15 +32,16 @@ class MergeConfSection():
     raise AttributeError
 
   def __iter__(self):
+    """
+    Support iterating through configuration items.
+    """
     for key, item in self._items.items():
       yield (key, item.value)
 
-  # get items for this section
-  # then for each subsection, check if any variables start with the section
-  # name and if so, strip the subsection name from them and send them to
-  # section._merge_env
-  # given envvars: list of variables with section prefix already stripped
-  #
+  # Given a list of variables with section prefix already stripped, find
+  # variables defined in environment that match configuration items, and
+  # assign their values to the items.  Then for each subsection, strip the
+  # section prefix from any variables and call recursively on te section.
   def _merge_env(self, envvars):
 
     # get any variable names for this section
@@ -60,6 +61,9 @@ class MergeConfSection():
         section._merge_env(sectionvars)
 
   def to_dict(self):
+    """
+    Return dictionary representation of configuration or section.
+    """
     # TODO(3.9): use union
     # return {
     #   key: item.value for key, item in self._items.items()
@@ -74,6 +78,9 @@ class MergeConfSection():
 
   @property
   def sections(self):
+    """
+    Return list of sections.
+    """
     return self._sections.keys()
 
   def add(self, key, value=None, mandatory=False, type=None):
@@ -87,7 +94,7 @@ class MergeConfSection():
         False.
       type (type): Type of value
 
-    Notes: Type detection is attempted if not specified
+    Notes: Type detection is attempted if not specified.
     """
     item = MergeConfValue(key, value, type=type)
 
@@ -103,6 +110,9 @@ class MergeConfSection():
   # TODO: this can be simplified to remove the if clause if/when `map` is no
   # longer permitted as a parameter to init()
   def add_section(self, name):
+    """
+    Add a subsection to this section and return its object.
+    """
     if name in self._sections:
       return self._sections[name]
     section = MergeConfSection(name)
@@ -111,8 +121,8 @@ class MergeConfSection():
 
   def missing_mandatory(self):
     """
-    Check that each mandatory item in this section has a defined value, and
-    each subsection as well.
+    Check that each mandatory item in this section and subsections has a
+    defined value.
 
     Returns:
       List of fully qualified mandatory items without a defined value, in

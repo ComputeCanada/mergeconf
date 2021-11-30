@@ -11,15 +11,12 @@ class MissingConfiguration(Exception):
   Raised if mandatory configuration items are missing.
 
   Attributes:
-    missing: list of tuples of missing variables' sections and keys
+    missing: string list of missing items in section-dot-key notation,
+      separated by commas.
   """
 
   def __init__(self, missingvars):
     self._missing = missingvars
-
-    ## flatten list of tuples into list of section.key
-    #l = [f"{section}.{key}" for (section, key) in missingvars]
-    #description = f"Undefined mandatory variables: {', '.join(l)}"
 
     description = f"Undefined mandatory variables: {missingvars}"
     super().__init__(description)

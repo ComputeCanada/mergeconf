@@ -21,8 +21,11 @@ class MergeConf(MergeConfSection):
   Configuration class.  Initialized optionally with configuration items, then
   additional items may be added explicitly (and must be if they are mandatory,
   a specific type, etc.).  Once all items have been added the configuration is
-  finalized with parse(), validation checks are performed, and the realized
+  finalized with merge(), validation checks are performed, and the realized
   values can be extracted.
+
+  This class inherits from the MergeConfSection class, which contains methods
+  to define configuration items and sections and examine the configuration.
   """
 
   def __init__(self, codename, files=None, map=None, strict=True):
@@ -36,13 +39,13 @@ class MergeConf(MergeConfSection):
         environment's namespace.  For example, for an `app_name` configuration
         key, with a codename `MYAPP`, the corresponding environment variable
         would be `MYAPP_APP_NAME`.
-      files: filename or list of filenames for configuration files.  Files are
-        applied in order listed, and so should be listed from least to most
-        important.
+      files (str or list): filename or list of filenames for configuration
+        files.  Files are applied in order listed, and so should be listed from
+        least to most important.
       map (dict): Configuration options which are neither mandatory nor of a
         specified type, specified as key, value pairs.
-      strict: If true, unexpected configuration sections or items will cause
-        an exception (UndefinedSection or UndefinedConfiguration,
+      strict (boolean): If true, unexpected configuration sections or items
+        will cause an exception (`UndefinedSection` or `UndefinedConfiguration`,
         respectively).  If false, they will be added to the merged
         configuration.
 
@@ -78,11 +81,10 @@ class MergeConf(MergeConfSection):
     be handled, such as a variable specifying an alternative config file.
 
     Returns:
-      Map of environment variables matching the application codename but not
-      matching defined configuration items.
+      Map of environment variables matching the application codename.  The
+      keys will be stripped of the codename prefix and will be converted to
+      lowercase.
     """
-    # TODO: does not actually ONLY return those unmatched, maybe that's fine
-
     # add this to any environment variable names
     prefix = self._codename.upper() + '_'
 
@@ -100,7 +102,13 @@ class MergeConf(MergeConfSection):
 
   def merge_file(self, config_file):
     """
-    Merge configuration defined in ConfigParser-format file.
+    Merge configuration defined in file.  File is expected to adhere to the
+    format defined by ConfigParser, with `=` used as the delimiter and
+    interpolation turned off.  In addition, unlike ConfigParser, config files
+    may include variables defined prior to any section header.
+
+    Arguments:
+      config_file (str): Path to config file.
     """
     config = ConfigParser(delimiters='=', interpolation=None)
 
@@ -160,8 +168,10 @@ class MergeConf(MergeConfSection):
     overridden by corresponding variables found in the environment, if any.
     Basic validations are performed.
 
-    Returns:
-      A dict of key-value configuration items.
+    This is a convenience method to handle the typical configuration
+    hierarchy and process.  Clients may also call other `merge_*` methods in
+    any order, but should call `validate()` if so to ensure all mandatory
+    configurations are specified.
     """
 
     # get configuration file(s) from environment, fall back to default
@@ -202,6 +212,6 @@ class MergeConf(MergeConfSection):
   # pylint: disable=no-self-use
   def parse(self, *args, **kwargs):
     """
-    Deprecated.  See merge()
+    Deprecated.  See merge().
     """
     raise exceptions.Deprecated(version='0.3', message=deprecation_msg)
