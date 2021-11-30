@@ -118,7 +118,6 @@ class MergeConf(MergeConfSection):
       with open(config_file) as f:
         config_content = f"[{self._main}]\n{f.read()}"
     except FileNotFoundError:
-      # TODO: disable this globally?
       # pylint: disable=raise-missing-from
       raise exceptions.MissingConfigurationFile(config_file)
 

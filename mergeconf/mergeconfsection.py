@@ -107,8 +107,6 @@ class MergeConfSection():
     if mandatory:
       self._mandatory.append(item.key)
 
-  # TODO: this can be simplified to remove the if clause if/when `map` is no
-  # longer permitted as a parameter to init()
   def add_section(self, name):
     """
     Add a subsection to this section and return its object.
