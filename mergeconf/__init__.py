@@ -31,7 +31,7 @@ The following code could be used to set that up:
 ```
 import mergeconf
 
-conf = mergeconf.MergeConf(files='app.conf')
+conf = mergeconf.MergeConf('myapp', files='app.conf')
 conf.add('name')
 conf.add('shape', mandatory=True)
 conf.add('colour', value='black')
@@ -66,7 +66,7 @@ overridden by file-based configurations.
 
 ```
 # not specifying file here
-conf = mergeconf.MergeConf()
+conf = mergeconf.MergeConf('myapp')
 conf.add('name')
 # other configuration items added, etc.
 # ...
