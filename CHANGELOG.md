@@ -1,6 +1,22 @@
 # Changelog
 
-## v0.3 (2021-05-09) Minor tweaks
+## v0.4 (2021-11-29) Significant overhaul.
+
+Added:
+
+- Configuration files may have items declared outside of sections.  This allows
+  for simpler configurations or for configurations where defining a section
+  header isn't appropriate.
+- Configuration items may be accessed using dot notation, for example,
+  `myconf.section.item` as well as by index notation.
+- Can now iterate through sections.
+
+Updated:
+
+- Documentation includes examples.
+- Everything in the MergeConf class.
+
+## v0.3 (2021-05-10) Minor tweaks
 
 Added:
 * MissingConfigurationFile exception has `file` attribute for the missing
