@@ -22,7 +22,7 @@ class MergeConfValue:
     else:
       self._value = self._type(value)
 
-  def __init__(self, key, value=None, type=None, mandatory=False):
+  def __init__(self, key, value=None, type=None, mandatory=False, cli=False):
     """
     Create a configuration item.
 
@@ -32,6 +32,7 @@ class MergeConfValue:
       type: Item data type.  Must be one of bool, int, float or str.  If not
         specified, will be autodetected.
       mandatory: Item must have configured value for configuration to be valid.
+      cli: Include item in command-line argument parsing.
     """
     if type and type not in [bool, int, float, str]:
       raise exceptions.UnsupportedType(type)
@@ -46,6 +47,7 @@ class MergeConfValue:
     self._key = key
     self._type = type
     self._mandatory = mandatory
+    self._cli = cli
 
     self._set_value_appropriately(value)
 
@@ -62,5 +64,13 @@ class MergeConfValue:
     self._set_value_appropriately(value)
 
   @property
+  def type(self):
+    return self._type
+
+  @property
   def mandatory(self):
     return self._mandatory
+
+  @property
+  def cli(self):
+    return self._cli
