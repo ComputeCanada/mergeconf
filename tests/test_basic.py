@@ -2,7 +2,10 @@
 # pylint: disable=unused-import,singleton-comparison
 import os
 import pytest
-from tests.fixtures import config, config_no_file, config_with_defaults, config_not_strict, config_strict, codename
+from tests.fixtures import (
+  config, config_no_file, config_with_defaults, config_not_strict,
+  config_strict, argparser, codename
+)
 import mergeconf
 
 # ---------------------------------------------------------------------------
@@ -265,3 +268,19 @@ def test_map(config):
   res = config.map(mandatories)
   print(res)
   assert res == ['shape', 'section2.count']
+
+def test_args(config, argparser):
+  """
+  Tests that argument parsing is set up appropriately.
+  """
+  # configure argparser to support the designated config items in the fixture
+  config.config_argparser(argparser)
+
+  # now try interpreting some stuff
+  args = argparser.parse_args(['--shape=square', '--upsidedown', '--section2-count=12'])
+  print(args)
+  config.merge(args)
+  assert config.shape == 'square'
+  assert config.section2.count == 12
+  assert config.upsidedown is True
+  assert config.rightsideup is True

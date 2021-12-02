@@ -1,5 +1,6 @@
 # vi: set softtabstop=2 ts=2 sw=2 expandtab:
 # pylint:
+import argparse
 import pytest
 from mergeconf import mergeconf
 
@@ -40,15 +41,13 @@ def config():
 
   # add configuration items of various types
   conf.add('name')
-  conf.add('shape', mandatory=True)
-  conf.add('colour', value='black')
-  #conf.add_boolean('upsidedown')
-  #conf.add_boolean('rightsideup', value=True)
-  conf.add('upsidedown', type=bool)
-  conf.add('rightsideup', type=bool, value=True)
+  conf.add('shape', mandatory=True, cli=True)
+  conf.add('colour', value='black', cli=True)
+  conf.add('upsidedown', type=bool, cli=True)
+  conf.add('rightsideup', type=bool, value=True, cli=True)
   section2 = conf.add_section('section2')
-  section2.add('count', type=int, mandatory=True)
-  section2.add('ratio', type=float)
+  section2.add('count', type=int, mandatory=True, cli=True)
+  section2.add('ratio', type=float, cli=True)
 
   return conf
 
@@ -122,3 +121,21 @@ def config_strict():
   section2.add('ratio', type=float)
 
   return conf
+
+@pytest.fixture
+def argparser():
+  """
+  Create a configuration with argparse enabled for command-line arguments.
+  """
+  # create argument parsing object
+  argparser = argparse.ArgumentParser()
+  argparser.add_argument("-c", "--config", type=str,
+                help="Configuration file",
+                default=__file__ + ".conf")
+  argparser.add_argument("-d", "--debug",
+                help="Debug output",
+                action='store_true')
+  argparser.add_argument("-q", "--quiet",
+                help="No output",
+                action='store_true')
+  return argparser
