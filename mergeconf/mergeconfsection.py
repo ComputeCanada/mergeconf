@@ -82,7 +82,7 @@ class MergeConfSection():
     """
     return self._sections.keys()
 
-  def add(self, key, value=None, type=None, mandatory=False):
+  def add(self, key, value=None, type=None, mandatory=False, cli=False):
     """
     Add a configuration item.
 
@@ -92,10 +92,11 @@ class MergeConfSection():
       type (type): Type of value
       mandatory (boolean): Whether item is mandatory or not, defaults to
         False.
+      cli (boolean): Whether item should be included in command-line arguments
 
     Notes: Type detection is attempted if not specified.
     """
-    item = MergeConfValue(key, value, type=type, mandatory=mandatory)
+    item = MergeConfValue(key, value, type=type, mandatory=mandatory, cli=cli)
 
     default = self._items.get(item.key, None)
     if default and not item.value:
@@ -128,20 +129,21 @@ class MergeConfSection():
 
     return self.map(mandatories) or None
 
-  def map(self, fn, sections=None):
+  def _map(self, fn, sections):
     """
     Apply the given function to every item in this section and descend into
     subsections.
 
     Args:
       fn: Function taking (sections, name, MergeConfValue) and returning some
-        value.
+        value, or None.
       sections: list of sections built as a trail of breadcrumbs during
-        recursion, not for use by clients.
+        recursion.
+
+    Returns:
+      List of values returned by function.  Values of None are not included.
     """
     results = []
-    if sections is None:
-      sections = []
     if self._name:
       sections.append(self._name)
 
@@ -153,6 +155,6 @@ class MergeConfSection():
 
     # descend into subsections
     for section in self._sections.values():
-      results.extend(section.map(fn, sections))
+      results.extend(section._map(fn, sections))
 
     return results
