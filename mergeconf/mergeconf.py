@@ -57,6 +57,7 @@ class MergeConf(MergeConfSection):
     self._codename = codename
     self._strict = strict
 
+    # turn given files parameter into an iterable sequence if not already
     self._files = files
     if files and not isinstance(files, (list, tuple)):
       self._files = (files,)
@@ -71,6 +72,63 @@ class MergeConf(MergeConfSection):
       logging.warning("Support for `map` argument is deprecated and will " \
         "be removed.  Please use `add()` to add configuration options and " \
         "their specifications, including default values.")
+
+  def map(self, fn):
+    """
+    Apply the given function to every item in this section and recursively for
+    subsections.
+
+    Args:
+      fn: Function taking (sections, name, MergeConfValue) and returning some
+        value, or None.
+
+    Returns:
+      List of values returned by function.  Values of None are not included.
+    """
+    return self._map(fn, [])
+
+  def config_argparser(self, argparser):
+    """
+    Configure ArgumentParser instance with designated configuration items.
+
+    This will run through all configuration items and add any defined as
+    appropriate for command-line arguments in the parser.  This method must
+    therefore be called before the ArgumentParser instance can be used.
+    """
+    def addargs(sections, name, item):
+      if item.cli:
+        argname = f"--{'-'.join(sections) + '-' if sections else ''}{name}"
+        print(argname)
+        if item.type == bool:
+          # the default action for a boolean should be store_true
+          action = 'store_false' if item.value is True else 'store_true'
+        else:
+          action = None
+        argparser.add_argument(
+          argname,
+          help='Added by mergeconf',
+          default=item.value,
+          action=action)
+
+    self.map(addargs)
+
+  def merge_args(self, args):
+    """
+    Merge command-line arguments parsed by ArgumentParser.
+
+    Args:
+      args: Arguments returned by parse_args().
+    """
+    argsd = vars(args)
+
+    def grokarg(sections, name, item):
+      if item.cli:
+        argname = f"{'_'.join(sections) + '_' if sections else ''}{name}"
+        print(argname)
+        if argname in argsd:
+          item.value = argsd[argname]
+
+    self.map(grokarg)
 
   def merge_environment(self):
     """
@@ -160,7 +218,7 @@ class MergeConf(MergeConfSection):
     if unfulfilled:
       raise exceptions.MissingConfiguration(', '.join(unfulfilled))
 
-  def merge(self):
+  def merge(self, args=None):
     """
     Takes configuration definition and any configuration files specified and
     reads in configuration, overriding default values.  These are in turn
@@ -171,6 +229,10 @@ class MergeConf(MergeConfSection):
     hierarchy and process.  Clients may also call other `merge_*` methods in
     any order, but should call `validate()` if so to ensure all mandatory
     configurations are specified.
+
+    Args:
+      args: Arguments processed by ArgumentParser.  Any matching appropriate
+        are merged in after environment variables.
     """
 
     # get configuration file(s) from environment, fall back to default
@@ -185,6 +247,10 @@ class MergeConf(MergeConfSection):
 
     # override with variables set in environment
     self.merge_environment()
+
+    # override further with command-line arguments, if available
+    if args:
+      self.merge_args(args)
 
     # test that mandatory values have been set
     self.validate()
