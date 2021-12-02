@@ -7,7 +7,6 @@ class MergeConfSection():
   def __init__(self, name, map=None):
     self._name = name
     self._items = {}
-    self._mandatory = []
     self._sections = {}
 
     if map:
@@ -83,29 +82,25 @@ class MergeConfSection():
     """
     return self._sections.keys()
 
-  def add(self, key, value=None, mandatory=False, type=None):
+  def add(self, key, value=None, type=None, mandatory=False):
     """
     Add a configuration item.
 
     Args:
       key (str): Name of configuration item
       value (whatever): Default value, None by default
+      type (type): Type of value
       mandatory (boolean): Whether item is mandatory or not, defaults to
         False.
-      type (type): Type of value
 
     Notes: Type detection is attempted if not specified.
     """
-    item = MergeConfValue(key, value, type=type)
+    item = MergeConfValue(key, value, type=type, mandatory=mandatory)
 
     default = self._items.get(item.key, None)
     if default and not item.value:
       item.value = default.value
     self._items[item.key] = item
-
-    # remember it's mandatory
-    if mandatory:
-      self._mandatory.append(item.key)
 
   def add_section(self, name):
     """
@@ -126,21 +121,38 @@ class MergeConfSection():
       List of fully qualified mandatory items without a defined value, in
       section-dot-item syntax.
     """
-    missing = []
+    def mandatories(sections, name, item):
+      if item.mandatory and item.value is None:
+        return f"{'.'.join(sections) + '.' if sections else ''}{name}"
+      return None
 
-    # check items
-    for key in self._mandatory:
-      if self._items[key].value is None:
-        missing.append(key)
+    return self.map(mandatories) or None
 
-    # check subsections
-    for sectionname, section in self._sections.items():
-      ss_missing = section.missing_mandatory()
-      # TODO: This is a pylint bug.  It applies to `sectionname`, but that
-      # should be locked in for each iteration of the enclosing for loop.
-      # see https://vald-phoenix.github.io/pylint-errors/plerr/errors/variables/W0640.html
-      # pylint: disable=cell-var-from-loop
-      if ss_missing:
-        missing.extend(map(lambda i: f"{sectionname}.{i}", ss_missing))
+  def map(self, fn, sections=None):
+    """
+    Apply the given function to every item in this section and descend into
+    subsections.
 
-    return missing or None
+    Args:
+      fn: Function taking (sections, name, MergeConfValue) and returning some
+        value.
+      sections: list of sections built as a trail of breadcrumbs during
+        recursion, not for use by clients.
+    """
+    results = []
+    if sections is None:
+      sections = []
+    if self._name:
+      sections.append(self._name)
+
+    # apply to items
+    for key, item in self._items.items():
+      el = fn(sections, key, item)
+      if el:
+        results.append(fn(sections, key, item))
+
+    # descend into subsections
+    for section in self._sections.values():
+      results.extend(section.map(fn, sections))
+
+    return results

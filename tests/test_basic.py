@@ -249,3 +249,19 @@ def test_garbage_item_by_attribute(config):
   config.merge()
   with pytest.raises(AttributeError):
     print(config.whut)
+
+def test_map(config):
+  """
+  Tests the map() function by building a list of mandatory configuration
+  items.
+  """
+  config.merge()
+
+  def mandatories(sections, name, item):
+    if item.mandatory:
+      return f"{'.'.join(sections) + '.' if sections else ''}{name}"
+    return None
+
+  res = config.map(mandatories)
+  print(res)
+  assert res == ['shape', 'section2.count']
