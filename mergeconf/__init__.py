@@ -2,9 +2,12 @@
 # pylint:
 """
 mergeconf - build a single configuration by merging multiple configuration
-sources with order of precedence, based on immediacy.  Currently: Default
-values are overridden by values read from configuration file which in turn are
-overridden by values read from environment variables.
+sources with order of precedence, based on immediacy.  Configurations can be
+read from files (via ConfigParser), environment variables, and command-line
+arguments (via ArgumentParser).  By default, configuration in files is
+overridden by that in environment variables which in turn is overridden by
+appropriate command-line arguments, but the library offers flexibility in
+ordering.
 
 ## Deprecation notice
 
