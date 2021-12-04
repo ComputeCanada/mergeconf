@@ -177,7 +177,7 @@ class MergeConf(MergeConfSection):
     interpolation turned off.  In addition, unlike ConfigParser, config files
     may include variables defined prior to any section header.
 
-    Arguments:
+    Args:
       config_file (str): Path to config file.
     """
     config = ConfigParser(delimiters='=', interpolation=None)
