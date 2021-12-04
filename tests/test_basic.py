@@ -278,9 +278,52 @@ def test_args(config, argparser):
 
   # now try interpreting some stuff
   args = argparser.parse_args(['--shape=square', '--upsidedown', '--section2-count=12'])
-  print(args)
+  assert argparser.format_usage() == \
+    """usage: test [-h] [-c CONFIG] [-d] [-q] [--shape SHAPE] [--colour COLOUR]
+            [--upsidedown] [--rightsideup] [--section1-fluff FLUFF]
+            [--section2-count COUNT] [--section2-ratio RATIO]
+"""
   config.merge(args)
   assert config.shape == 'square'
+  assert config.section1.fluff == 'light'
   assert config.section2.count == 12
   assert config.upsidedown is True
   assert config.rightsideup is True
+
+def test_sample_config(config):
+  """
+  Test that the sample configuration is generated correctly.
+  """
+  sample_config = config.sample_config()
+  print("Sample configuration:\n\n```")
+  print(sample_config)
+  print("```")
+  assert sample_config == \
+"""# (str) Unique name for the thing
+#name =
+
+# (str) The shape of the thing
+shape =
+
+# (str) The colour of the thing
+#colour = black
+
+# (bool) Upside-downness of the thing
+#upsidedown =
+
+# (bool) Is this thing right-side-up
+#rightsideup = True
+
+[section1]
+# (str) What level of fluffiness does this item exhibit
+#fluff = light
+
+# (int) It's hard to come up with examples
+#density =
+
+[section2]
+# (int) How many of the thing
+count =
+
+# (float) The ratio of thing to thang
+#ratio ="""
