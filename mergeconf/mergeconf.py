@@ -93,28 +93,41 @@ class MergeConf(MergeConfSection):
 
     This will run through all configuration items and add any defined as
     appropriate for command-line arguments in the parser.  This method must
-    therefore be called before the ArgumentParser instance can be used.
+    therefore be called before the ArgumentParser instance can be used.  The
+    client may configure any of its own arguments and other sections before
+    and/or after calling this method.
+
+    Arguments are configured with help text based on the configuration items'
+    descriptions, if available.  Boolean configuration items do not take
+    arguments but instead will set a value opposite of their default, or True
+    if not was defined.
+
+    args:
+      argparser: ArgumentParser object to populate with appropriate items.
     """
     def addargs(sections, name, item):
       if item.cli:
         argname = f"--{'-'.join(sections) + '-' if sections else ''}{name}"
-        print(argname)
+        kwargs = {
+          'help': item.description,
+          'default': item.value
+        }
         if item.type == bool:
           # the default action for a boolean should be store_true
-          action = 'store_false' if item.value is True else 'store_true'
+          kwargs['action'] = 'store_false' if item.value is True else 'store_true'
         else:
-          action = None
-        argparser.add_argument(
-          argname,
-          help='Added by mergeconf',
-          default=item.value,
-          action=action)
-
+          kwargs['type'] = item.type
+          kwargs['metavar'] = name.upper()
+        argparser.add_argument(argname, **kwargs)
     self.map(addargs)
 
   def merge_args(self, args):
     """
     Merge command-line arguments parsed by ArgumentParser.
+
+    Only configuration items identified with `cli=True` on creation
+    (in `add()`) will be considered.  See `config_argparser()` for adding the
+    arguments to an ArgumentParser object automatically.
 
     Args:
       args: Arguments returned by parse_args().
@@ -124,7 +137,6 @@ class MergeConf(MergeConfSection):
     def grokarg(sections, name, item):
       if item.cli:
         argname = f"{'_'.join(sections) + '_' if sections else ''}{name}"
-        print(argname)
         if argname in argsd:
           item.value = argsd[argname]
 
@@ -254,6 +266,39 @@ class MergeConf(MergeConfSection):
 
     # test that mandatory values have been set
     self.validate()
+
+  def sample_config(self):
+    """
+    Create a sample configuration.
+
+    This will be more informative if configuration items have been specified
+    with descriptions.
+
+    Returns:
+      A string describing a sample configuration file.
+
+    Note:
+      The sample configuration will have this format:
+
+      ```
+      # (str) this is the first item
+      name =
+
+      # (int) this is the second item which has a default value
+      #count = 1
+
+      [section1]
+      # (bool) this item has no default
+      #has_car =
+
+      # (str) This is mandatory
+      description =
+      ```
+    """
+    # The internal method for building sample config will always append an
+    # extra empty string.  Get rid of this before joining all the lines
+    # together with a newline to build the "file".
+    return '\n'.join(self._sample_config()[:-1])
 
   # -------------------------------------------------------------------------
   #                                                       deprecated methods

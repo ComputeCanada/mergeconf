@@ -82,7 +82,8 @@ class MergeConfSection():
     """
     return self._sections.keys()
 
-  def add(self, key, value=None, type=None, mandatory=False, cli=False):
+  def add(self, key, value=None, type=None, mandatory=False, cli=False,
+      description=None):
     """
     Add a configuration item.
 
@@ -93,10 +94,13 @@ class MergeConfSection():
       mandatory (boolean): Whether item is mandatory or not, defaults to
         False.
       cli (boolean): Whether item should be included in command-line arguments
+      description (str): Short descriptive text that may appear in usage text
+        or sample configurations
 
     Notes: Type detection is attempted if not specified.
     """
-    item = MergeConfValue(key, value, type=type, mandatory=mandatory, cli=cli)
+    item = MergeConfValue(key, value, type=type, mandatory=mandatory,
+      cli=cli, description=description)
 
     default = self._items.get(item.key, None)
     if default and not item.value:
@@ -144,8 +148,6 @@ class MergeConfSection():
       List of values returned by function.  Values of None are not included.
     """
     results = []
-    if self._name:
-      sections.append(self._name)
 
     # apply to items
     for key, item in self._items.items():
@@ -154,7 +156,30 @@ class MergeConfSection():
         results.append(fn(sections, key, item))
 
     # descend into subsections
-    for section in self._sections.values():
-      results.extend(section._map(fn, sections))
+    for name, section in self._sections.items():
+      results.extend(section._map(fn, sections + [name]))
 
     return results
+
+  def _sample_config(self):
+
+    sample = []
+
+    for name, item in self._items.items():
+      typestr = f"({item.type.__name__}) " if item.type is not None else ''
+      sample.append(f"# {typestr}{item.description or ''}")
+
+      if item.value:
+        sample.append(f"#{name} = {item.value}")
+      elif item.mandatory:
+        sample.append(f"{name} =")
+      else:
+        sample.append(f"#{name} =")
+
+      sample.append("")
+
+    for name, section in self._sections.items():
+      sample.append(f"[{name}]")
+      sample.extend(section._sample_config())
+
+    return sample
