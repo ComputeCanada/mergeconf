@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.5 (2021-12-04) Support for command-line arguments.
+
+Added:
+
+- Support for integration with Python's ArgumentParser library so that
+  command-line arguments can be merged into configuration.
+
 ## v0.4 (2021-11-29) Significant overhaul.
 
 Added:
