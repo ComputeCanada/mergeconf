@@ -80,7 +80,85 @@ conf.validate()
 
 # now ready to use
 ```
+
+### Adding command-line arguments
+
+MergeConf can work with Python's built-in `argparse` package to handle
+command-line arguments in addition to configuration files and environment
+variables:
+
+```
+conf = mergeconf.MergeConf('myapp')
+
+# use the `cli` parameter to indicate inclusion in command-line arguments, and
+# use the `description` parameter so there's help text in the command usage
+conf.add('name', description='Name of the thing', cli=True)
+...
+
+# set up argparse however you like
+parser = argparse.ArgumentParser(prog='myapp')
+parser.add_argument(...)
+...
+
+# now call MergeConf to configure the parser for indicated configurations
+conf.config_argparser(parser)
+
+# parse arguments
+args = parser.parse_args()
+
+# merge configuration
+conf.merge(args)
+```
+
+### Generating sample configuration
+
+MergeConf also provides a way to generate a sample configuration file using the
+configuration item descriptions, types and default values.
+
+```
+print(conf.sample_config())
+```
+
+Produces something like:
+
+```
+# (str) Unique name for the thing
+#name =
+
+# (str) The shape of the thing
+shape =
+
+# (str) The colour of the thing
+#colour = black
+
+# (bool) Upside-downness of the thing
+#upsidedown =
+
+# (bool) Is this thing right-side-up
+#rightsideup = True
+
+[section1]
+# (str) What level of fluffiness does this item exhibit
+#fluff = light
+
+# (int) It's hard to come up with examples
+#density =
+
+[section2]
+# (int) How many of the thing
+count =
+
+# (float) The ratio of thing to thang
+#ratio =
+```
+
+Note that:
+* expected types are described in the comment and what follows is the description
+* default values are provided in the commented-out assignment
+* optional items are commented out
+* mandatory items are not commented out (but blank)
 """
+
 from .mergeconf import MergeConf
 from .mergeconfsection import MergeConfSection
 from .mergeconfvalue import MergeConfValue
