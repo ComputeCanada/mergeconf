@@ -30,6 +30,11 @@ $(PACKAGES): $(SOURCES)
 	@echo Version: $(VERSION)
 	@python3 -m build
 
+docs/%.md: mergeconf/%.py misc/pdoc-templates/text.mako
+	@pdoc3 --template-dir=misc/pdoc-templates mergeconf.$* > $@
+
+docs: docs/mergeconf.md docs/mergeconfsection.md docs/mergeconfvalue.md docs/exceptions.md
+
 publish-test: $(PACKAGES) checkversion
 	@python3 -m twine upload --repository testpypi $(PACKAGES)
 
