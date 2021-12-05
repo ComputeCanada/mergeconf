@@ -4,8 +4,6 @@
 Exceptions raised by MergeConf package.
 """
 
-import inspect
-
 class MissingConfiguration(Exception):
   """
   Raised if mandatory configuration items are missing.
@@ -98,27 +96,27 @@ class UndefinedConfiguration(Exception):
   def item(self):
     return self._item
 
-class Deprecated(Exception):
-  """
-  Raised for hard deprecations where functionality has been removed and the
-  API is not available at all.
-
-  Attributes:
-    version: the last version in which this functionality is available.
-    message: further information to assist the user.
-  """
-  def __init__(self, version, message=None):
-    self._version = version
-    self._message = message
-    self._function = inspect.stack()[1].function
-    etc = f": {message}" if message else '.'
-    description = f"Deprecated API `{self._function}` last available in version {version}{etc}"
-    super().__init__(description)
-
-  @property
-  def function(self):
-    return self._function
-
-  @property
-  def version(self):
-    return self._version
+#class Deprecated(Exception):
+#  """
+#  Raised for hard deprecations where functionality has been removed and the
+#  API is not available at all.
+#
+#  Attributes:
+#    version: the last version in which this functionality is available.
+#    message: further information to assist the user.
+#  """
+#  def __init__(self, version, message=None):
+#    self._version = version
+#    self._message = message
+#    self._function = inspect.stack()[1].function
+#    etc = f": {message}" if message else '.'
+#    description = f"Deprecated API `{self._function}` last available in version {version}{etc}"
+#    super().__init__(description)
+#
+#  @property
+#  def function(self):
+#    return self._function
+#
+#  @property
+#  def version(self):
+#    return self._version

@@ -224,18 +224,18 @@ def test_unconfigured_section_not_allowed(config_strict):
     config_strict.validate()
   assert e.value.section == 'section3'
 
-def test_deprecated_functionality(config):
-  """
-  Tests that attempted use of deprecated functionality results in an exception.
-  """
-  with pytest.raises(mergeconf.exceptions.Deprecated) as e:
-    config.add_boolean('thisshouldfail', True)
-  assert e.value.function == 'add_boolean'
-  assert e.value.version == '0.3'
-  with pytest.raises(mergeconf.exceptions.Deprecated) as e:
-    config.parse('fakefilename')
-  assert e.value.function == 'parse'
-  assert e.value.version == '0.3'
+#def test_deprecated_functionality(config):
+#  """
+#  Tests that attempted use of deprecated functionality results in an exception.
+#  """
+#  with pytest.raises(mergeconf.exceptions.Deprecated) as e:
+#    config.add_boolean('thisshouldfail', True)
+#  assert e.value.function == 'add_boolean'
+#  assert e.value.version == '0.3'
+#  with pytest.raises(mergeconf.exceptions.Deprecated) as e:
+#    config.parse('fakefilename')
+#  assert e.value.function == 'parse'
+#  assert e.value.version == '0.3'
 
 def test_garbage_item_by_index(config):
   """
