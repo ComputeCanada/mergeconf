@@ -164,5 +164,5 @@ Note that:
 
 from .mergeconf import MergeConf
 from .mergeconfsection import MergeConfSection
-from .mergeconfvalue import MergeConfValue
+from .mergeconfitem import MergeConfItem
 from . import exceptions

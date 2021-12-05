@@ -1,7 +1,7 @@
 # vi: set softtabstop=2 ts=2 sw=2 expandtab:
 # pylint:
 
-from mergeconf.mergeconfvalue import MergeConfValue
+from mergeconf.mergeconfitem import MergeConfItem
 
 class MergeConfSection():
   def __init__(self, name, map=None):
@@ -14,7 +14,7 @@ class MergeConfSection():
         if isinstance(value, dict):
           self._sections[key] = MergeConfSection(key, map=value)
         else:
-          self._items[key] = MergeConfValue(key, value)
+          self._items[key] = MergeConfItem(key, value)
 
   def __getitem__(self, key):
     if key in self._items:
@@ -99,7 +99,7 @@ class MergeConfSection():
 
     Notes: Type detection is attempted if not specified.
     """
-    item = MergeConfValue(key, value, type=type, mandatory=mandatory,
+    item = MergeConfItem(key, value, type=type, mandatory=mandatory,
       cli=cli, description=description)
 
     default = self._items.get(item.key, None)
@@ -139,7 +139,7 @@ class MergeConfSection():
     subsections.
 
     Args:
-      fn: Function taking (sections, name, MergeConfValue) and returning some
+      fn: Function taking (sections, name, MergeConfItem) and returning some
         value, or None.
       sections: list of sections built as a trail of breadcrumbs during
         recursion.

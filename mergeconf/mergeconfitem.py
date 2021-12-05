@@ -7,7 +7,7 @@ from mergeconf import exceptions
 # reasonable replacement (like `klass` for `class`)
 builtin_type = type
 
-class MergeConfValue:
+class MergeConfItem:
   """
   Basic configuration item and base class for more complex types.
   """
