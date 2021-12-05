@@ -6,15 +6,6 @@ from configparser import ConfigParser
 from mergeconf import exceptions
 from mergeconf.mergeconfsection import MergeConfSection
 
-# deprecation apology message
-deprecation_msg = """
-This method is deprecated immediately.  I apologise for any inconvenience, but
-I estimate uptake of this library to be in the low 1's and probably actually
-just 1.  To continue using the API you're expecting, you can specify version
-0.3 of the library but it was overhauled for better functionality and, I think,
-a nicer API.
-"""
-
 
 class MergeConf(MergeConfSection):
   """
@@ -79,7 +70,7 @@ class MergeConf(MergeConfSection):
     subsections.
 
     Args:
-      fn: Function taking (sections, name, MergeConfValue) and returning some
+      fn: Function taking (sections, name, MergeConfItem) and returning some
         value, or None.
 
     Returns:
@@ -299,29 +290,3 @@ class MergeConf(MergeConfSection):
     # extra empty string.  Get rid of this before joining all the lines
     # together with a newline to build the "file".
     return '\n'.join(self._sample_config()[:-1])
-
-  # -------------------------------------------------------------------------
-  #                                                       deprecated methods
-  # -------------------------------------------------------------------------
-
-  # pylint: disable=no-self-use
-  def add_boolean(self, key, value=None, mandatory=False):
-    """
-    _Deprecated._  Add a configuration item of type Boolean.
-
-    Args:
-      key (str): Name of configuration item
-      value (boolean): Default value, None by default
-      mandatory (boolean): Whether item is mandatory or not, defaults to
-        False.
-
-    Note: This is deprecated; simply use `add` with `type=bool`.
-    """
-    raise exceptions.Deprecated(version='0.3', message=deprecation_msg)
-
-  # pylint: disable=no-self-use
-  def parse(self, *args, **kwargs):
-    """
-    Deprecated.  See merge().
-    """
-    raise exceptions.Deprecated(version='0.3', message=deprecation_msg)
