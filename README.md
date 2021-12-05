@@ -18,7 +18,6 @@ to be updated accordingly or pin their versions to v0.3.
     * [function `__init__`](#function-__init__)
     * [function `__iter__`](#function-__iter__)
     * [function `add`](#function-add)
-    * [function `add_boolean`](#function-add_boolean)
     * [function `add_section`](#function-add_section)
     * [function `config_argparser`](#function-config_argparser)
     * [function `map`](#function-map)
@@ -27,7 +26,6 @@ to be updated accordingly or pin their versions to v0.3.
     * [function `merge_environment`](#function-merge_environment)
     * [function `merge_file`](#function-merge_file)
     * [function `missing_mandatory`](#function-missing_mandatory)
-    * [function `parse`](#function-parse)
     * [function `sample_config`](#function-sample_config)
     * [property `sections`](#property-sections)
     * [function `to_dict`](#function-to_dict)
@@ -238,18 +236,6 @@ Args:
 
 Notes: Type detection is attempted if not specified.
 
-### function `add_boolean`
-
-_Deprecated._  Add a configuration item of type Boolean.
-
-Args:
-  * `key` (**str**): Name of configuration item
-  * `value` (**boolean**): Default value, None by default
-  * `mandatory` (**boolean**): Whether item is mandatory or not, defaults to
-    False.
-
-Note: This is deprecated; simply use `add` with `type=bool`.
-
 ### function `add_section`
 
 Add a subsection to this section and return its object.
@@ -342,10 +328,6 @@ defined value.
 Returns:
   List of fully qualified mandatory items without a defined value, in
   section-dot-item syntax.
-
-### function `parse`
-
-Deprecated.  See merge().
 
 ### function `sample_config`
 
