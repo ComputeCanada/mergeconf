@@ -8,11 +8,6 @@ overridden by that in environment variables which in turn is overridden by
 appropriate command-line arguments, but the library offers flexibility in
 ordering.
 
-## Deprecation notice
-
-v0.4 is a significant refactoring and includes API changes.  Clients will need
-to be updated accordingly or pin their versions to v0.3.
-
 * [module `mergeconf`](#module-mergeconf)
   * [class `MergeConf`](#class-MergeConf)
     * [function `__init__`](#function-__init__)
