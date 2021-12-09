@@ -289,6 +289,9 @@ def test_args(config, argparser):
   assert config.section2.count == 12
   assert config.upsidedown is True
   assert config.rightsideup is True
+  assert config.debug is False
+  with pytest.raises(AttributeError):
+    assert config.whatnow is None
 
 def test_sample_config(config):
   """

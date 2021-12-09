@@ -45,6 +45,7 @@ class MergeConf(MergeConfSection):
     """
     super().__init__(None, map=map)
 
+    self._args = None
     self._codename = codename
     self._strict = strict
 
@@ -63,6 +64,16 @@ class MergeConf(MergeConfSection):
       logging.warning("Support for `map` argument is deprecated and will " \
         "be removed.  Please use `add()` to add configuration options and " \
         "their specifications, including default values.")
+
+  # overload this here in order to try and catch non-mergeconf CLI arguments
+  # if appropriate
+  def __getattr__(self, attr):
+    try:
+      return super().__getattr__(attr)
+    except AttributeError as e:
+      if self._args is not None and attr in vars(self._args):
+        return vars(self._args)[attr]
+      raise e
 
   def map(self, fn):
     """
@@ -132,6 +143,9 @@ class MergeConf(MergeConfSection):
           item.value = argsd[argname]
 
     self.map(grokarg)
+
+    # retain args for retrieving individual non-mergeconf CLI args
+    self._args = args
 
   def merge_environment(self):
     """
